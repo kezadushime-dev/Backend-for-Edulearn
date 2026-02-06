@@ -16,10 +16,8 @@ const envSchema = zod_1.z.object({
     CLOUDINARY_CLOUD_NAME: zod_1.z.string(),
     CLOUDINARY_API_KEY: zod_1.z.string(),
     CLOUDINARY_API_SECRET: zod_1.z.string(),
-    SMTP_HOST: zod_1.z.string(),
-    SMTP_PORT: zod_1.z.string(),
-    SMTP_USER: zod_1.z.string(),
-    SMTP_PASS: zod_1.z.string(),
+    EMAIL_USER: zod_1.z.string().optional(),
+    EMAIL_PASS: zod_1.z.string().optional(),
     ADMIN_EMAIL: zod_1.z.string().email(),
     ADMIN_PASSWORD: zod_1.z.string().min(8),
 });

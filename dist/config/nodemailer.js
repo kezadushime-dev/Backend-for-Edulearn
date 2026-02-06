@@ -5,19 +5,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyEmailService = exports.transporter = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
+const env_1 = require("../config/env"); // adjust path
 exports.transporter = nodemailer_1.default.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
+    host: env_1.env.SMTP_HOST,
+    port: parseInt(env_1.env.SMTP_PORT),
+    secure: true, // 👈 REQUIRED for Gmail 465
     auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: env_1.env.SMTP_USER,
+        pass: env_1.env.SMTP_PASS,
     },
 });
 const verifyEmailService = async () => {
     try {
         await exports.transporter.verify();
         console.log('✅ Email Service Connected');
-        console.log(`📧 SMTP: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}`);
+        console.log(`📧 SMTP: ${env_1.env.SMTP_HOST}:${env_1.env.SMTP_PORT}`);
         return true;
     }
     catch (error) {

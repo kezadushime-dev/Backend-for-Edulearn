@@ -11,6 +11,8 @@ const error_middleware_1 = require("./middlewares/error.middleware");
 const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const swagger_1 = require("./config/swagger");
 const AppError_1 = require("./utils/AppError");
+const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const lesson_routes_1 = __importDefault(require("./routes/lesson.routes"));
 const quiz_routes_1 = __importDefault(require("./routes/quiz.routes"));
 const app = (0, express_1.default)();
@@ -24,6 +26,8 @@ if (process.env.NODE_ENV === 'development') {
 // Docs
 app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
 // Routes
+app.use('/api/v1/admin', admin_routes_1.default);
+app.use('/api/v1/auth', auth_routes_1.default);
 app.use('/api/v1/lessons', lesson_routes_1.default);
 app.use('/api/v1/quizzes', quiz_routes_1.default);
 // Health Check

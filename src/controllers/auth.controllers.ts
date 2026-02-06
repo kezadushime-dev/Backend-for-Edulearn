@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { User } from '../models/user.model';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
-import { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordChangedEmail, sendAccountDeletedEmail } from '../utils/sendEmail';
+import { sendWelcomeEmail, sendPasswordResetEmail, sendPasswordChangedEmail, sendAccountDeletedEmail, sendProfileUpdatedEmail } from '../utils/sendEmail';
 import { registerSchema, loginSchema } from '../validations/authValidation';
 import cloudinary from '../config/claudinary';
 
@@ -122,6 +122,13 @@ export const updateMe = catchAsync(async (req: any, res: any, next: any) => {
     filteredBody.image = req.file.path; // Cloudinary URL
   }
 
+  // Track updated fields for email notification
+  const updatedFields: string[] = [];
+  if (filteredBody.name) updatedFields.push('Name');
+  if (filteredBody.email) updatedFields.push('Email');
+  if (filteredBody.password) updatedFields.push('Password');
+  if (filteredBody.image) updatedFields.push('Profile Image');
+
   // 4) Update user
   let user;
   if (filteredBody.password) {
@@ -139,6 +146,15 @@ export const updateMe = catchAsync(async (req: any, res: any, next: any) => {
       new: true,
       runValidators: true,
     });
+  }
+
+  // Send profile updated email
+  if (updatedFields.length > 0 && user) {
+    try {
+      await sendProfileUpdatedEmail(user.email, user.name, updatedFields);
+    } catch (err) {
+      console.error('Failed to send profile updated email:', err);
+    }
   }
 
   res.status(200).json({
@@ -183,7 +199,7 @@ export const forgotPassword = catchAsync(async (req: any, res: any, next: any) =
   await user.save({ validateBeforeSave: false });
 
   // Send password reset email
-  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+  const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${resetToken}`;
 
   try {
     await sendPasswordResetEmail(user.email, user.name, resetURL);

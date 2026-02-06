@@ -68,3 +68,12 @@ export const sendAccountDeletedByAdminEmail = async (email: string, name: string
     html: accountDeletedByAdminEmailTemplate(name),
   });
 };
+
+export const sendProfileUpdatedEmail = async (email: string, name: string, updatedFields: string[]): Promise<void> => {
+  const { profileUpdatedEmailTemplate } = await import('../templates/emails/profileUpdatedEmail');
+  await sendEmail({
+    email,
+    subject: 'Profile Updated Successfully',
+    html: profileUpdatedEmailTemplate(name, updatedFields),
+  });
+};

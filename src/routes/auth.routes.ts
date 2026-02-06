@@ -8,7 +8,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/v1/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -43,7 +43,7 @@ router.post("/register", validate(registerSchema), authController.register);
 
 /**
  * @swagger
- * /api/v1/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Auth]
@@ -72,7 +72,7 @@ router.post("/login", validate(loginSchema), authController.login);
 
 /**
  * @swagger
- * /api/v1/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Logout user
  *     tags: [Auth]
@@ -86,7 +86,7 @@ router.post("/logout", protect, authController.logout);
 
 /**
  * @swagger
- * /api/v1/auth/me:
+ * /auth/me:
  *   get:
  *     summary: Get current user profile
  *     tags: [Auth]
@@ -102,7 +102,7 @@ router.get("/me", protect, authController.getMe);
 
 /**
  * @swagger
- * /api/v1/auth/me:
+ * /auth/me:
  *   patch:
  *     summary: Update current user profile
  *     tags: [Auth]
@@ -130,7 +130,7 @@ router.patch("/me", protect, authController.updateMe);
 
 /**
  * @swagger
- * /api/v1/auth/update-password:
+ * /auth/update-password:
  *   patch:
  *     summary: Update user password
  *     tags: [Auth]
@@ -161,7 +161,7 @@ router.patch("/update-password", protect, authController.updatePassword);
 
 /**
  * @swagger
- * /api/v1/auth/forgot-password:
+ * /auth/forgot-password:
  *   post:
  *     summary: Request password reset
  *     tags: [Auth]
@@ -187,7 +187,7 @@ router.post("/forgot-password", authController.forgotPassword);
 
 /**
  * @swagger
- * /api/v1/auth/reset-password/{token}:
+ * /auth/reset-password/{token}:
  *   patch:
  *     summary: Reset password with token
  *     tags: [Auth]
@@ -219,7 +219,7 @@ router.patch("/reset-password/:token", authController.resetPassword);
 
 /**
  * @swagger
- * /api/v1/auth/delete-account:
+ * /auth/delete-account:
  *   delete:
  *     summary: Delete user account
  *     tags: [Auth]

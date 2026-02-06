@@ -11,7 +11,7 @@ router.use(restrictTo("admin"));
 
 /**
  * @swagger
- * /api/v1/admin/users:
+ * /admin/users:
  *   get:
  *     summary: Get all users
  *     tags: [Admin]
@@ -29,7 +29,7 @@ router.get("/users", adminController.getAllUsers);
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}:
+ * /admin/users/{id}:
  *   get:
  *     summary: Get user by ID
  *     tags: [Admin]
@@ -51,7 +51,7 @@ router.get("/users/:id", adminController.getUserById);
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}/role:
+ * /admin/users/{id}/role:
  *   patch:
  *     summary: Update user role
  *     tags: [Admin]
@@ -89,7 +89,7 @@ router.patch(
 
 /**
  * @swagger
- * /api/v1/admin/users/{id}:
+ * /admin/users/{id}:
  *   delete:
  *     summary: Delete user
  *     tags: [Admin]
@@ -111,7 +111,7 @@ router.delete("/users/:id", adminController.deleteUser);
 
 /**
  * @swagger
- * /api/v1/admin/users/role/{role}:
+ * /admin/users/role/{role}:
  *   get:
  *     summary: Get users by role
  *     tags: [Admin]
@@ -132,7 +132,7 @@ router.get("/users/role/:role", adminController.getUsersByRole);
 
 /**
  * @swagger
- * /api/v1/admin/statistics:
+ * /admin/statistics:
  *   get:
  *     summary: Get platform statistics
  *     tags: [Admin]

@@ -1,19 +1,21 @@
 import nodemailer from 'nodemailer';
+import { env } from '../config/env';   // adjust path
 
 export const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '465'),
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
+  host: env.SMTP_HOST,
+  port: parseInt(env.SMTP_PORT),
+  secure: true,        // 👈 REQUIRED for Gmail 465
+  auth: {
+    user: env.SMTP_USER,
+    pass: env.SMTP_PASS,
+  },
 });
 
 export const verifyEmailService = async (): Promise<boolean> => {
   try {
     await transporter.verify();
     console.log('✅ Email Service Connected');
-    console.log(`📧 SMTP: ${process.env.SMTP_HOST}:${process.env.SMTP_PORT}`);
+    console.log(`📧 SMTP: ${env.SMTP_HOST}:${env.SMTP_PORT}`);
     return true;
   } catch (error) {
     console.error('❌ Email Service Failed:', error);

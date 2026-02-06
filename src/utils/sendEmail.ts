@@ -1,4 +1,4 @@
-import { transporter } from '../config/nodemailer';
+import { sendEmail as sendMailTransport } from '../config/nodemailer';
 
 interface EmailOptions {
   email: string;
@@ -8,18 +8,11 @@ interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
-  if (!transporter) {
-    console.warn('⚠️  Email not sent - Email service not configured');
-    return;
-  }
-  
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM || 'noreply@learningplatform.com',
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-    html: options.html,
-  });
+  await sendMailTransport(
+    options.email,
+    options.subject,
+    options.html || options.message || ''
+  );
 };
 
 export const sendWelcomeEmail = async (email: string, name: string): Promise<void> => {

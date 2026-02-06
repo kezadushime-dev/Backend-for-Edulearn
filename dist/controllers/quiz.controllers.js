@@ -1,0 +1,105 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getAnalytics = exports.submitQuiz = exports.deleteQuiz = exports.updateQuiz = exports.getQuizByLesson = exports.getQuizById = exports.getAllQuizzes = exports.createQuiz = void 0;
+const quiz_model_1 = require("../models/quiz.model");
+const result_model_1 = require("../models/result.model");
+const catchAsync_1 = require("../utils/catchAsync");
+// Create a new quiz
+exports.createQuiz = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.create({ ...req.body, createdBy: req.user.id });
+    res.status(201).json({ status: "success", data: { quiz } });
+});
+// Get all quizzes
+exports.getAllQuizzes = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quizzes = await quiz_model_1.Quiz.find()
+        .populate("lesson", "title")
+        .populate("createdBy", "name email");
+    res.status(200).json({
+        status: "success",
+        results: quizzes.length,
+        data: { quizzes },
+    });
+});
+// Get quiz by ID
+exports.getQuizById = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.findById(req.params.id).populate("lesson", "title");
+    if (!quiz)
+        return res.status(404).json({ status: "fail", message: "Quiz not found" });
+    res.status(200).json({ status: "success", data: { quiz } });
+});
+// Get quiz by lesson
+exports.getQuizByLesson = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.findOne({ lesson: req.params.lessonId }).populate("lesson", "title");
+    if (!quiz)
+        return res.status(404).json({ status: "fail", message: "Quiz not found" });
+    res.status(200).json({ status: "success", data: { quiz } });
+});
+// Update a quiz
+exports.updateQuiz = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.findByIdAndUpdate(req.params.id, req.body, {
+        new: true,
+        runValidators: true,
+    });
+    if (!quiz)
+        return res.status(404).json({ status: "fail", message: "Quiz not found" });
+    res.status(200).json({ status: "success", data: { quiz } });
+});
+// Delete a quiz
+exports.deleteQuiz = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.findByIdAndDelete(req.params.id);
+    if (!quiz)
+        return res.status(404).json({ status: "fail", message: "Quiz not found" });
+    res.status(204).json({ status: "success", data: null });
+});
+// Submit quiz answers and automatically grade
+exports.submitQuiz = (0, catchAsync_1.catchAsync)(async (req, res) => {
+    const quiz = await quiz_model_1.Quiz.findById(req.params.id);
+    if (!quiz)
+        return res.status(404).json({ status: "fail", message: "Quiz not found" });
+    let score = 0;
+    const responses = req.body.answers.map((answer, index) => {
+        const question = quiz.questions[index];
+        const isCorrect = answer.selectedOptionIndex === question.correctOptionIndex;
+        if (isCorrect)
+            score += question.points;
+        return {
+            questionId: question._id,
+            selectedOptionIndex: answer.selectedOptionIndex,
+            isCorrect,
+        };
+    });
+    const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
+    const percentage = (score / totalPoints) * 100;
+    const passed = percentage >= quiz.passingScore;
+    const result = await result_model_1.Result.create({
+        user: req.user.id,
+        quiz: quiz._id,
+        score,
+        percentage,
+        passed,
+        responses,
+    });
+    res.status(200).json({ status: "success", data: { result } });
+});
+// Get analytics for all quizzes (average, pass rates, etc.)
+exports.getAnalytics = (0, catchAsync_1.catchAsync)(async (_req, res) => {
+    const results = await result_model_1.Result.find().populate("quiz", "title");
+    const analytics = results.reduce((acc, r) => {
+        const quizId = r.quiz._id.toString();
+        if (!acc[quizId])
+            acc[quizId] = { title: r.quiz.title, attempts: 0, passed: 0, totalScore: 0 };
+        acc[quizId].attempts += 1;
+        if (r.passed)
+            acc[quizId].passed += 1;
+        acc[quizId].totalScore += r.score;
+        return acc;
+    }, {});
+    // Convert to array with averages
+    const analyticsArray = Object.values(analytics).map((q) => ({
+        title: q.title,
+        attempts: q.attempts,
+        passed: q.passed,
+        averageScore: q.totalScore / q.attempts,
+    }));
+    res.status(200).json({ status: "success", data: { analytics: analyticsArray } });
+});

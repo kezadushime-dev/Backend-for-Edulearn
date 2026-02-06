@@ -8,6 +8,11 @@ interface EmailOptions {
 }
 
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
+  if (!transporter) {
+    console.warn('⚠️  Email not sent - Email service not configured');
+    return;
+  }
+  
   await transporter.sendMail({
     from: process.env.EMAIL_FROM || 'noreply@learningplatform.com',
     to: options.email,

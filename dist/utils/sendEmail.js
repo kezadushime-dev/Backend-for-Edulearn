@@ -36,6 +36,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendAccountDeletedByAdminEmail = exports.sendRoleUpdatedEmail = exports.sendAccountDeletedEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendWelcomeEmail = exports.sendEmail = void 0;
 const nodemailer_1 = require("../config/nodemailer");
 const sendEmail = async (options) => {
+    if (!nodemailer_1.transporter) {
+        console.warn('⚠️  Email not sent - Email service not configured');
+        return;
+    }
     await nodemailer_1.transporter.sendMail({
         from: process.env.EMAIL_FROM || 'noreply@learningplatform.com',
         to: options.email,

@@ -13,17 +13,16 @@ const envSchema = zod_1.z.object({
     MONGODB_URI: zod_1.z.string().min(1),
     JWT_SECRET: zod_1.z.string().min(8),
     JWT_EXPIRES_IN: zod_1.z.string().default('7d'),
-    CLOUDINARY_CLOUD_NAME: zod_1.z.string(),
-    CLOUDINARY_API_KEY: zod_1.z.string(),
-    CLOUDINARY_API_SECRET: zod_1.z.string(),
+    CLOUDINARY_CLOUD_NAME: zod_1.z.string().optional(),
+    CLOUDINARY_API_KEY: zod_1.z.string().optional(),
+    CLOUDINARY_API_SECRET: zod_1.z.string().optional(),
     EMAIL_USER: zod_1.z.string().optional(),
     EMAIL_PASS: zod_1.z.string().optional(),
-    ADMIN_EMAIL: zod_1.z.string().email(),
-    ADMIN_PASSWORD: zod_1.z.string().min(8),
+    ADMIN_EMAIL: zod_1.z.string().email().optional(),
+    ADMIN_PASSWORD: zod_1.z.string().min(8).optional(),
 });
 const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
-    console.error('❌ Invalid environment variables:', parsed.error.format());
-    process.exit(1);
+    console.warn('⚠️  Some environment variables are invalid:', parsed.error.format());
 }
-exports.env = parsed.data;
+exports.env = parsed.success ? parsed.data : process.env;

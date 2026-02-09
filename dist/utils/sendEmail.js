@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendAccountDeletedByAdminEmail = exports.sendRoleUpdatedEmail = exports.sendAccountDeletedEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendWelcomeEmail = exports.sendEmail = void 0;
+exports.sendProfileUpdatedEmail = exports.sendAccountDeletedByAdminEmail = exports.sendRoleUpdatedEmail = exports.sendAccountDeletedEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendWelcomeEmail = exports.sendEmail = void 0;
 const nodemailer_1 = require("../config/nodemailer");
 const sendEmail = async (options) => {
     await (0, nodemailer_1.sendEmail)(options.email, options.subject, options.html || options.message || '');
@@ -93,3 +93,12 @@ const sendAccountDeletedByAdminEmail = async (email, name) => {
     });
 };
 exports.sendAccountDeletedByAdminEmail = sendAccountDeletedByAdminEmail;
+const sendProfileUpdatedEmail = async (email, name, updatedFields) => {
+    const { profileUpdatedEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/profileUpdatedEmail')));
+    await (0, exports.sendEmail)({
+        email,
+        subject: 'Profile Updated Successfully',
+        html: profileUpdatedEmailTemplate(name, updatedFields),
+    });
+};
+exports.sendProfileUpdatedEmail = sendProfileUpdatedEmail;

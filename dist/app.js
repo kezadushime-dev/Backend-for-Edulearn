@@ -24,7 +24,7 @@ if (process.env.NODE_ENV === 'development') {
     app.use((0, morgan_1.default)('dev'));
 }
 // Docs
-app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
+app.use('/api/v1/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swagger_1.swaggerSpec));
 // Routes
 app.use('/api/v1/admin', admin_routes_1.default);
 app.use('/api/v1/auth', auth_routes_1.default);

@@ -15,10 +15,10 @@ const options = {
         },
         servers: [
             {
-                url: "http://localhost:8008/api/v1",
+                url: "http://localhost:8002/api/v1",
                 description: "Development server",
             },
-            //   { url: "https://project.onrender.com", description: "Production server" },
+            { url: "https://backend-for-edulearn.onrender.com", description: "Production server" },
         ],
         components: {
             securitySchemes: {

@@ -23,7 +23,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 
 // Routes
 app.use('/api/v1/admin', adminroutes)

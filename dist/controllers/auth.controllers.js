@@ -109,6 +109,16 @@ exports.updateMe = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     if (req.file && req.file.path) {
         filteredBody.image = req.file.path; // Cloudinary URL
     }
+    // Track updated fields for email notification
+    const updatedFields = [];
+    if (filteredBody.name)
+        updatedFields.push('Name');
+    if (filteredBody.email)
+        updatedFields.push('Email');
+    if (filteredBody.password)
+        updatedFields.push('Password');
+    if (filteredBody.image)
+        updatedFields.push('Profile Image');
     // 4) Update user
     let user;
     if (filteredBody.password) {
@@ -129,6 +139,15 @@ exports.updateMe = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
             new: true,
             runValidators: true,
         });
+    }
+    // Send profile updated email
+    if (updatedFields.length > 0 && user) {
+        try {
+            await (0, sendEmail_1.sendProfileUpdatedEmail)(user.email, user.name, updatedFields);
+        }
+        catch (err) {
+            console.error('Failed to send profile updated email:', err);
+        }
     }
     res.status(200).json({
         status: 'success',
@@ -166,7 +185,7 @@ exports.forgotPassword = (0, catchAsync_1.catchAsync)(async (req, res, next) => 
     const resetToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
     // Send password reset email
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/resetPassword/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
     try {
         await (0, sendEmail_1.sendPasswordResetEmail)(user.email, user.name, resetURL);
         res.status(200).json({ status: 'success', message: 'Password reset link sent to email!' });

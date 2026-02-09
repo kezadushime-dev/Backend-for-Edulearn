@@ -44,7 +44,7 @@ const auth_middleware_1 = require("../middlewares/auth.middleware");
 const router = express_1.default.Router();
 /**
  * @swagger
- * /api/v1/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
@@ -78,7 +78,7 @@ const router = express_1.default.Router();
 router.post("/register", (0, validate_middleware_1.validate)(authValidation_1.registerSchema), authController.register);
 /**
  * @swagger
- * /api/v1/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Login user
  *     tags: [Auth]
@@ -106,7 +106,7 @@ router.post("/register", (0, validate_middleware_1.validate)(authValidation_1.re
 router.post("/login", (0, validate_middleware_1.validate)(authValidation_1.loginSchema), authController.login);
 /**
  * @swagger
- * /api/v1/auth/logout:
+ * /auth/logout:
  *   post:
  *     summary: Logout user
  *     tags: [Auth]
@@ -119,7 +119,7 @@ router.post("/login", (0, validate_middleware_1.validate)(authValidation_1.login
 router.post("/logout", auth_middleware_1.protect, authController.logout);
 /**
  * @swagger
- * /api/v1/auth/me:
+ * /auth/me:
  *   get:
  *     summary: Get current user profile
  *     tags: [Auth]
@@ -134,7 +134,7 @@ router.post("/logout", auth_middleware_1.protect, authController.logout);
 router.get("/me", auth_middleware_1.protect, authController.getMe);
 /**
  * @swagger
- * /api/v1/auth/me:
+ * /auth/me:
  *   patch:
  *     summary: Update current user profile
  *     tags: [Auth]
@@ -161,7 +161,7 @@ router.get("/me", auth_middleware_1.protect, authController.getMe);
 router.patch("/me", auth_middleware_1.protect, authController.updateMe);
 /**
  * @swagger
- * /api/v1/auth/update-password:
+ * /auth/update-password:
  *   patch:
  *     summary: Update user password
  *     tags: [Auth]
@@ -191,7 +191,7 @@ router.patch("/me", auth_middleware_1.protect, authController.updateMe);
 router.patch("/update-password", auth_middleware_1.protect, authController.updatePassword);
 /**
  * @swagger
- * /api/v1/auth/forgot-password:
+ * /auth/forgot-password:
  *   post:
  *     summary: Request password reset
  *     tags: [Auth]
@@ -216,7 +216,7 @@ router.patch("/update-password", auth_middleware_1.protect, authController.updat
 router.post("/forgot-password", authController.forgotPassword);
 /**
  * @swagger
- * /api/v1/auth/reset-password/{token}:
+ * /auth/reset-password/{token}:
  *   patch:
  *     summary: Reset password with token
  *     tags: [Auth]
@@ -247,7 +247,7 @@ router.post("/forgot-password", authController.forgotPassword);
 router.patch("/reset-password/:token", authController.resetPassword);
 /**
  * @swagger
- * /api/v1/auth/delete-account:
+ * /auth/delete-account:
  *   delete:
  *     summary: Delete user account
  *     tags: [Auth]

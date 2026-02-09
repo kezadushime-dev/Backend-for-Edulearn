@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 8008;
+const PORT = process.env.PORT || 8002;
 
 connectDB().then(async () => {
   await verifyEmailService();

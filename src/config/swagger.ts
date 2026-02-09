@@ -1,5 +1,7 @@
 import swaggerJsDoc from "swagger-jsdoc";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const options: swaggerJsDoc.Options = {
   definition: {
     openapi: "3.0.0",
@@ -9,13 +11,24 @@ const options: swaggerJsDoc.Options = {
       description:
         "Production-ready REST API for learning-platform with JWT, Multer, and Cloudinary",
     },
-    servers: [
-      {
-        url: "http://localhost:8002/api/v1",
-        description: "Development server",
-      },
-      { url: "https://backend-for-edulearn.onrender.com", description: "Production server" },
-    ],
+    // ✅ Use correct base URL including /api/v1
+    servers: isProduction
+      ? [
+          {
+            url: "https://backend-for-edulearn.onrender.com/api/v1",
+            description: "Production server",
+          },
+        ]
+      : [
+          {
+            url: "http://localhost:8002/api/v1",
+            description: "Development server",
+          },
+          {
+            url: "https://backend-for-edulearn.onrender.com/api/v1",
+            description: "Production server",
+          },
+        ],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -26,7 +39,7 @@ const options: swaggerJsDoc.Options = {
       },
     },
   },
-  apis: ["./src/routes/*.ts"],
+  apis: ["./src/routes/*.ts"], // keep your JSDoc comments as-is
 };
 
 export const swaggerSpec = swaggerJsDoc(options);

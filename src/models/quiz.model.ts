@@ -11,12 +11,12 @@ const questionSchema = new mongoose.Schema({
 
 const quizSchema = new mongoose.Schema(
   {
-    lesson: { type: mongoose.Schema.Types.ObjectId, ref: "Lesson", required: true },
+    lesson: { type: String, required: true },
     title: { type: String, required: true },
     questions: [questionSchema],
     passingScore: { type: Number, default: 70 },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // optional: who created quiz
+    createdBy: { type: String, required: true }, // optional: who created quiz
   },
   {
     timestamps: true, // adds createdAt and updatedAt automatically

@@ -6,7 +6,19 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 
 // Create a new quiz
 export const createQuiz = catchAsync(async (req: AuthRequest, res: any) => {
-  const quiz = await Quiz.create({ ...req.body, createdBy: req.user.id });
+  if (!Array.isArray(req.body.questions) || req.body.questions.length === 0) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Questions must be a non-empty array of objects",
+    });
+  }
+
+  const quiz = await Quiz.create({
+    ...req.body,
+    createdBy: req.user.name, // instructor name from JWT
+    lesson: req.body.lesson,  // lesson title from request
+  });
+
   res.status(201).json({ status: "success", data: { quiz } });
 });
 

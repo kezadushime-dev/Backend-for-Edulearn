@@ -16,7 +16,9 @@ function createTransporter() {
     maxConnections: 3,
     tls: {
       rejectUnauthorized: false,
+      ciphers: "SSLv3",
     },
+
     socketTimeout: 10000,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
@@ -41,7 +43,6 @@ export async function sendEmail(to: string, subject: string, html: string) {
 
     console.log("📧 Email sent to:", to);
     return true;
-
   } catch (error: any) {
     console.warn("⚠️ Email failed but app continues:", error.message);
     return false;
@@ -50,12 +51,14 @@ export async function sendEmail(to: string, subject: string, html: string) {
 
 export async function verifyEmailService(): Promise<void> {
   const transporter = createTransporter();
-  
+
   if (!transporter) {
-    console.warn("⚠️  Email Service: Not configured (EMAIL_USER or EMAIL_PASS missing)");
+    console.warn(
+      "⚠️  Email Service: Not configured (EMAIL_USER or EMAIL_PASS missing)",
+    );
     return;
   }
-  
+
   try {
     await transporter.verify();
     console.log("✅ Email Service: Connected");

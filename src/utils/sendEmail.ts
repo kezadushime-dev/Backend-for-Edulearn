@@ -69,6 +69,16 @@ export const sendAccountDeletedByAdminEmail = async (email: string, name: string
   });
 };
 
+export const sendReportApprovedEmail = async (email: string, name: string): Promise<void> => {
+  const { reportApprovedEmailTemplate } = await import("../templates/emails/sendReportApprovedEmail");
+
+  await sendEmail({
+    email,
+    subject: "Your Report Download Request is Approved",
+    html: reportApprovedEmailTemplate(name),
+  });
+};
+
 export const sendProfileUpdatedEmail = async (email: string, name: string, updatedFields: string[]): Promise<void> => {
   const { profileUpdatedEmailTemplate } = await import('../templates/emails/profileUpdatedEmail');
   await sendEmail({

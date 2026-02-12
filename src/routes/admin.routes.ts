@@ -7,7 +7,6 @@ import * as adminController from "../controllers/admin.controllers";
 const router = express.Router();
 
 router.use(protect);
-router.use(restrictTo("admin"));
 
 /**
  * @swagger
@@ -25,7 +24,7 @@ router.use(restrictTo("admin"));
  *       403:
  *         description: Forbidden - Admin only
  */
-router.get("/users", adminController.getAllUsers);
+router.get("/users", protect, restrictTo("admin"), adminController.getAllUsers);
 
 /**
  * @swagger
@@ -47,7 +46,7 @@ router.get("/users", adminController.getAllUsers);
  *       404:
  *         description: User not found
  */
-router.get("/users/:id", adminController.getUserById);
+router.get("/users/:id", protect, restrictTo("admin"), adminController.getUserById);
 
 /**
  * @swagger
@@ -136,11 +135,7 @@ router.post("/users", protect, restrictTo("admin"), validate(adminCreateUserSche
  *       404:
  *         description: User not found
  */
-router.patch(
-  "/users/:id/role",
-  validate(updateRoleSchema),
-  adminController.updateUserRole
-);
+router.patch( "/users/:id/role", protect, restrictTo("admin"), validate(updateRoleSchema), adminController.updateUserRole );
 
 /**
  * @swagger
@@ -162,7 +157,7 @@ router.patch(
  *       404:
  *         description: User not found
  */
-router.delete("/users/:id", adminController.deleteUser);
+router.delete("/users/:id", protect, restrictTo("admin"), adminController.deleteUser);
 
 /**
  * @swagger
@@ -183,7 +178,7 @@ router.delete("/users/:id", adminController.deleteUser);
  *       200:
  *         description: List of users with specified role
  */
-router.get("/users/role/:role", adminController.getUsersByRole);
+router.get("/users/role/:role", protect, restrictTo("admin"),adminController.getUsersByRole);
 
 /**
  * @swagger
@@ -197,6 +192,62 @@ router.get("/users/role/:role", adminController.getUsersByRole);
  *       200:
  *         description: Platform statistics
  */
-router.get("/statistics", adminController.getStatistics);
+router.get("/statistics", protect, restrictTo("admin"),adminController.getStatistics);
+
+/**
+ * @swagger
+ * /admin/reports/{id}/approve:
+ *   patch:
+ *     summary: Approve a learner's report(admin and instructor)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Admin or instructor approves a learner's report, allowing them to download it. Sets report status to "approved" and records who approved it.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Report ID to approve
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Report approved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Report approved
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     report:
+ *                       type: object
+ *                       description: Approved report object
+ *       404:
+ *         description: Report not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: Report not found
+ *       401:
+ *         description: Unauthorized – user must be logged in
+ *       403:
+ *         description: Forbidden – only admin or instructor can approve
+ */
+router.patch("/reports/:id/approve", protect, restrictTo("admin", "instructor"), adminController.approveReport);
 
 export default router;

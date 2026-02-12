@@ -1,5 +1,6 @@
 import { Quiz } from '../models/quiz.model';
 import { Result } from '../models/result.model';
+import { Report } from "../models/report.model";
 import { catchAsync } from '../utils/catchAsync';
 import { AuthRequest } from '../middlewares/auth.middleware';
 
@@ -69,12 +70,18 @@ export const deleteQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 // Submit quiz answers and automatically grade
 export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
   const quiz = await Quiz.findById(req.params.id);
-  if (!quiz) return res.status(404).json({ status: "fail", message: "Quiz not found" });
+  if (!quiz) {
+    return res.status(404).json({ status: "fail", message: "Quiz not found" });
+  }
 
   let score = 0;
+
   const responses = req.body.answers.map((answer: any, index: number) => {
     const question = quiz.questions[index];
-    const isCorrect = answer.selectedOptionIndex === question.correctOptionIndex;
+
+    const isCorrect =
+      answer.selectedOptionIndex === question.correctOptionIndex;
+
     if (isCorrect) score += question.points;
 
     return {
@@ -84,10 +91,15 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     };
   });
 
-  const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
+  const totalPoints = quiz.questions.reduce(
+    (sum, q) => sum + q.points,
+    0
+  );
+
   const percentage = (score / totalPoints) * 100;
   const passed = percentage >= quiz.passingScore;
 
+  // Save result
   const result = await Result.create({
     user: req.user.id,
     quiz: quiz._id,
@@ -97,8 +109,69 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     responses,
   });
 
-  res.status(200).json({ status: "success", data: { result } });
+  // ===== UPDATE REPORT =====
+
+  let report = await Report.findOne({ user: req.user.id });
+
+  if (!report) {
+    report = await Report.create({
+      user: req.user.id,
+      quizzes: [],
+    });
+  }
+
+  report.quizzes.push({
+  quiz: quiz._id,
+  score,
+  percentage,
+  passed,
+  lesson: quiz.lesson, // ✅ add lesson
 });
+  
+
+  // calculate new average
+  const total = report.quizzes.reduce(
+  (sum, q) => sum + (q.percentage ?? 0),
+  0
+);
+
+  report.overallAverage = total / report.quizzes.length;
+
+  // every new submission → needs new approval
+  // report.status = "pending";
+  // report.approvedBy = undefined;
+
+  await report.save();
+
+  // ========================
+
+  res.status(200).json({
+    status: "success",
+    data: { result, report },
+  });
+});
+
+export const requestReportDownload = catchAsync(
+  async (req: AuthRequest, res: any) => {
+    const report = await Report.findOne({ user: req.user.id });
+
+    if (!report) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Report not found",
+      });
+    }
+
+    report.status = "pending"; // ✅ now becomes pending
+    await report.save();
+
+    res.status(200).json({
+      status: "success",
+      message: "Download request sent. Waiting for approval.",
+    });
+  }
+);
+
 
 // Get analytics for all quizzes (average, pass rates, etc.)
 export const getAnalytics = catchAsync(async (_req: AuthRequest, res: any) => {

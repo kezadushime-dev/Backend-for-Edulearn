@@ -8,8 +8,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/models/quiz.model.tsx", "src/models/result.model.tsx", "src/models/user.model.tsx", "src/models/lesson.model.tsx", "src/middlewares/auth.middleware.tsx", "src/middlewares/error.middleware.tsx", "src/middlewares/upload.middleware.tsx", "src/middlewares/validate.middleware.tsx"],
   "exclude": ["node_modules"]
 }

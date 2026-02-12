@@ -64,6 +64,6 @@ export async function verifyEmailService(): Promise<void> {
     console.log("✅ Email Service: Connected");
     console.log(`📧 SMTP: gmail (${env.EMAIL_USER})`);
   } catch (error: any) {
-    console.error("❌ Email Service: Failed -", error.message);
+    console.error("❌ Email Service: Failed -", error);
   }
 }

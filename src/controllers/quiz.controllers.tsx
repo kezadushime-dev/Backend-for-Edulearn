@@ -111,6 +111,11 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 
   // ===== UPDATE REPORT =====
 
+  // Get ALL results of this user
+  const userResults = await Result.find({
+    user: req.user.id,
+  }).populate("quiz");
+
   let report = await Report.findOne({ user: req.user.id });
 
   if (!report) {
@@ -120,26 +125,28 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     });
   }
 
-  report.quizzes.push({
-  quiz: quiz._id,
-  score,
-  percentage,
-  passed,
-  lesson: quiz.lesson, // ✅ add lesson
-});
-  
+  // Clear existing quizzes safely (DocumentArray safe)
+  report.quizzes.splice(0, report.quizzes.length);
 
-  // calculate new average
+  // Rebuild quizzes properly
+  userResults.forEach((resItem: any) => {
+    report.quizzes.push({
+      quiz: resItem.quiz._id,
+      score: resItem.score,
+      percentage: resItem.percentage,
+      passed: resItem.passed,
+      lesson: resItem.quiz.lesson,
+    });
+  });
+
+  // Recalculate overall average
   const total = report.quizzes.reduce(
-  (sum, q) => sum + (q.percentage ?? 0),
-  0
-);
+    (sum: number, q: any) => sum + (q.percentage ?? 0),
+    0,
+  );
 
-  report.overallAverage = total / report.quizzes.length;
-
-  // every new submission → needs new approval
-  // report.status = "pending";
-  // report.approvedBy = undefined;
+  report.overallAverage =
+    report.quizzes.length > 0 ? total / report.quizzes.length : 0;
 
   await report.save();
 
@@ -147,7 +154,10 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 
   res.status(200).json({
     status: "success",
-    data: { result, report },
+    data: {
+      result,
+      report,
+    },
   });
 });
 

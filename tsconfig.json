@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts", "src/models/quiz.model.tsx", "src/models/result.model.tsx", "src/models/user.model.tsx", "src/models/lesson.model.tsx", "src/middlewares/auth.middleware.tsx", "src/middlewares/error.middleware.tsx", "src/middlewares/upload.middleware.tsx", "src/middlewares/validate.middleware.tsx"],
+  "include": ["src/**/*.ts", "src/models/quiz.model.tsx", "src/models/result.model.tsx", "src/models/user.model.tsx", "src/models/lesson.model.tsx", "src/middlewares/auth.middleware.tsx", "src/middlewares/error.middleware.tsx", "src/middlewares/upload.middleware.tsx", "src/middlewares/validate.middleware.tsx", "src/controllers/quiz.controllers.tsx", "src/controllers/lesson.controllers.tsx", "src/controllers/auth.controllers.tsx", "src/controllers/admin.controllers.tsx"],
   "exclude": ["node_modules"]
 }

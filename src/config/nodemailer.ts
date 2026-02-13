@@ -12,7 +12,12 @@ function createTransporter() {
       user: env.EMAIL_USER,
       pass: env.EMAIL_PASS,
     },
-    
+    pool: true,
+    maxConnections: 3,
+    tls: {
+      rejectUnauthorized: false,
+      ciphers: "SSLv3",
+    },
 
     socketTimeout: 10000,
     connectionTimeout: 10000,

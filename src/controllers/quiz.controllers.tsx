@@ -148,25 +148,46 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     responses,
   });
 
+  // Populate the quiz to include lesson title
+  await result.populate({
+    path: "quiz",
+    select: "title lesson",
+  });
+
+  const populatedQuiz = result.quiz as any;
+
+  const formattedResult = {
+    ...result.toObject(),
+    quiz: {
+      _id: populatedQuiz._id,
+      title: populatedQuiz.title,
+      lesson: populatedQuiz.lesson,
+    },
+  };
+
   // ===== UPDATE REPORT =====
   let report = await Report.findOne({ user: req.user.id });
-
-  // Get all results of this user
-  const userResults = await Result.find({ user: req.user.id }).populate("quiz");
+  const userResults = await Result.find({ user: req.user.id }).populate({
+    path: "quiz",
+    select: "title lesson",
+  });
 
   if (!report) {
-    // Create report if missing
     report = await Report.create({
       user: req.user.id,
       quizzes: [],
       overallAverage: 0,
-      status: "pending", // default
+      status: "pending",
     });
   }
 
-  // Rebuild quizzes array from results
+  // Rebuild quizzes array with lesson included
   report.quizzes = userResults.map((resItem: any) => ({
-    quiz: resItem.quiz._id,
+    quiz: {
+      _id: resItem.quiz._id,
+      title: resItem.quiz.title,
+      lesson: resItem.quiz.lesson,
+    },
     score: resItem.score,
     percentage: resItem.percentage,
     passed: resItem.passed,
@@ -185,7 +206,7 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 
   res.status(200).json({
     status: "success",
-    data: { result, report },
+    data: { result: formattedResult, report },
   });
 });
 

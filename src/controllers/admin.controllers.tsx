@@ -12,7 +12,10 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 
 // Get all users
 export const getAllUsers = catchAsync(async (req: any, res: any) => {
-  const users = await User.find().select("-password");
+  const users = await User.find()
+    .sort({ createdAt: -1 }) 
+    .select("-password");    
+
   res.status(200).json({
     status: "success",
     results: users.length,

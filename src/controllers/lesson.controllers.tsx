@@ -46,7 +46,7 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
 // Get all lessons
 export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
   const lessons = await Lesson.find()
-    .sort({ updatedAt: -1 }) // newest updated or created on top
+    .sort({ updatedAt: -1 }) 
     .populate("instructor", "name image");
 
   res.status(200).json({

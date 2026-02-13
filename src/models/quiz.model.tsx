@@ -19,7 +19,7 @@ const quizSchema = new mongoose.Schema(
     createdBy: { type: String, required: true }, // optional: who created quiz
   },
   {
-    timestamps: true, // adds createdAt and updatedAt automatically
+    timestamps: true, 
   });
 
 export const Quiz = mongoose.model('Quiz', quizSchema);

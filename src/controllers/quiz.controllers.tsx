@@ -36,8 +36,9 @@ export const createQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 
 // Get all quizzes
 export const getAllQuizzes = catchAsync(async (req: AuthRequest, res: any) => {
-  // Populate lesson to get its title
+  // Fetch all quizzes, sorted by newest updated/created first
   const quizzes = await Quiz.find()
+    .sort({ updatedAt: -1 }) // newest on top
     .populate("lesson", "title") // populate only the title
     .populate("createdBy", "name email");
 
@@ -145,7 +146,7 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
   const result = await Result.create({
     user: req.user.id,
     quiz: quiz._id,
-    lesson: quiz.lesson, 
+    lesson: quiz.lesson,
     score,
     percentage,
     passed,

@@ -28,16 +28,17 @@ export const getAllReportRequests = catchAsync(
 
 // Request report download
 export const requestReportDownload = catchAsync(async (req: AuthRequest, res: any) => {
-  // Try to find existing report
   let report = await Report.findOne({ user: req.user.id });
 
-  // Get all results of the user and populate quiz
-  const userResults = await Result.find({ user: req.user.id }).populate("quiz");
+  // Populate quiz and lesson
+  const userResults = await Result.find({ user: req.user.id }).populate({
+    path: "quiz",
+    select: "title lesson",
+    populate: { path: "lesson", select: "title" },
+  });
 
-  // Filter out results where quiz was deleted
   const validResults = userResults.filter((resItem: any) => resItem.quiz);
 
-  // If no report exists, create one rebuilt from results
   if (!report) {
     report = await Report.create({
       user: req.user.id,
@@ -47,12 +48,15 @@ export const requestReportDownload = catchAsync(async (req: AuthRequest, res: an
         percentage: resItem.percentage,
         passed: resItem.passed,
         takenAt: resItem.createdAt || new Date(),
+        lesson: resItem.quiz.lesson
+          ? { _id: resItem.quiz.lesson._id, title: resItem.quiz.lesson.title }
+          : { _id: null, title: "No Lesson" },
       })),
       overallAverage:
         validResults.length > 0
           ? validResults.reduce((sum: number, r: any) => sum + r.percentage, 0) / validResults.length
           : 0,
-      status: "pending", // default pending
+      status: "pending",
     });
 
     return res.status(200).json({
@@ -62,7 +66,6 @@ export const requestReportDownload = catchAsync(async (req: AuthRequest, res: an
     });
   }
 
-  // If a request is already pending, block duplicate request
   if (report.status === "pending") {
     return res.status(400).json({
       status: "fail",
@@ -70,7 +73,6 @@ export const requestReportDownload = catchAsync(async (req: AuthRequest, res: an
     });
   }
 
-  // Otherwise, allow a new request
   report.status = "pending";
   await report.save();
 
@@ -83,31 +85,30 @@ export const requestReportDownload = catchAsync(async (req: AuthRequest, res: an
 
 //download report
 export const downloadReport = catchAsync(async (req: AuthRequest, res: any) => {
-  const report = (await Report.findOne({ user: req.user.id })
-    .populate('user', 'name email')
+  const report = await Report.findOne({ user: req.user.id })
+    .populate("user", "name email")
     .populate({
-      path: 'quizzes.quiz',
-      populate: { path: 'lesson', select: 'title' },
-      select: 'title lesson',
-    }))!; // non-null assertion because we'll check
+      path: "quizzes.quiz",
+      select: "title lesson",
+      populate: { path: "lesson", select: "title" },
+    });
 
   if (!report) {
-    return res.status(404).json({ status: 'fail', message: 'Report not found' });
+    return res.status(404).json({ status: "fail", message: "Report not found" });
   }
 
-  if (report.status !== 'approved') {
-    return res.status(403).json({ status: 'fail', message: 'Report not approved yet' });
+  if (report.status !== "approved") {
+    return res.status(403).json({ status: "fail", message: "Report not approved yet" });
   }
 
-  // Cast populated user to IUser for TypeScript
   const populatedUser = report.user as IUser;
 
   const pdfBuffer = await generateReportPDF(report);
 
   res.writeHead(200, {
-    'Content-Type': 'application/pdf',
-    'Content-Disposition': `attachment; filename=report_${populatedUser.name}.pdf`,
-    'Content-Length': pdfBuffer.length,
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename=report_${populatedUser.name}.pdf`,
+    "Content-Length": pdfBuffer.length,
   });
 
   res.end(pdfBuffer);

@@ -116,7 +116,10 @@ export const deleteQuiz = catchAsync(async (req: AuthRequest, res: any) => {
 
 // Submit quiz answers and automatically grade
 export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
-  const quiz = await Quiz.findById(req.params.id);
+  const quiz = await Quiz.findById(req.params.id).populate({
+    path: "lesson",
+    select: "title",
+  });
   if (!quiz)
     return res.status(404).json({ status: "fail", message: "Quiz not found" });
 
@@ -127,6 +130,7 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     const isCorrect =
       answer.selectedOptionIndex === question.correctOptionIndex;
     if (isCorrect) score += question.points;
+
     return {
       questionId: question._id,
       selectedOptionIndex: answer.selectedOptionIndex,
@@ -138,20 +142,21 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
   const percentage = (score / totalPoints) * 100;
   const passed = percentage >= quiz.passingScore;
 
-  // Save result
   const result = await Result.create({
     user: req.user.id,
     quiz: quiz._id,
+    lesson: quiz.lesson, 
     score,
     percentage,
     passed,
     responses,
   });
 
-  // Populate the quiz to include lesson title
+  // Populate for formatted result
   await result.populate({
     path: "quiz",
     select: "title lesson",
+    populate: { path: "lesson", select: "title" },
   });
 
   const populatedQuiz = result.quiz as any;
@@ -161,15 +166,18 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     quiz: {
       _id: populatedQuiz._id,
       title: populatedQuiz.title,
-      lesson: populatedQuiz.lesson,
+      lesson: populatedQuiz.lesson
+        ? { _id: populatedQuiz.lesson._id, title: populatedQuiz.lesson.title }
+        : { _id: null, title: "No Lesson" },
     },
   };
 
-  // ===== UPDATE REPORT =====
+  // Update or create report
   let report = await Report.findOne({ user: req.user.id });
   const userResults = await Result.find({ user: req.user.id }).populate({
     path: "quiz",
     select: "title lesson",
+    populate: { path: "lesson", select: "title" },
   });
 
   if (!report) {
@@ -181,17 +189,19 @@ export const submitQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     });
   }
 
-  // Rebuild quizzes array with lesson included
+  // Rebuild quizzes array with lessons
   report.quizzes = userResults.map((resItem: any) => ({
     quiz: {
       _id: resItem.quiz._id,
       title: resItem.quiz.title,
-      lesson: resItem.quiz.lesson,
+      lesson: resItem.quiz.lesson
+        ? { _id: resItem.quiz.lesson._id, title: resItem.quiz.lesson.title }
+        : { _id: null, title: "No Lesson" },
     },
     score: resItem.score,
     percentage: resItem.percentage,
     passed: resItem.passed,
-    takenAt: resItem.createdAt || new Date(),
+    takenAt: resItem.completedAt || new Date(),
   }));
 
   // Recalculate overall average

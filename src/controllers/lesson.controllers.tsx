@@ -11,7 +11,7 @@ const uploadToCloudinary = (fileBuffer: Buffer) => {
       (error, result) => {
         if (error) return reject(error);
         resolve(result?.secure_url!);
-      }
+      },
     );
     stream.end(fileBuffer);
   });
@@ -23,12 +23,16 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
 
   // 1️⃣ Check if images are provided
   if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-    return res.status(400).json({ status: "fail", message: "At least one image is required" });
+    return res
+      .status(400)
+      .json({ status: "fail", message: "At least one image is required" });
   }
 
   // 2️⃣ Upload all images to Cloudinary
   const files = req.files as Express.Multer.File[];
-  const uploadedUrls = await Promise.all(files.map(file => uploadToCloudinary(file.buffer)));
+  const uploadedUrls = await Promise.all(
+    files.map((file) => uploadToCloudinary(file.buffer)),
+  );
 
   // 3️⃣ Create lesson with uploaded image URLs
   const newLesson = await Lesson.create({
@@ -41,13 +45,23 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
 
 // Get all lessons
 export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
-  const lessons = await Lesson.find().populate("instructor", "name image");
-  res.status(200).json({ status: "success", results: lessons.length, data: { lessons } });
+  const lessons = await Lesson.find()
+    .sort({ updatedAt: -1 }) // newest updated or created on top
+    .populate("instructor", "name image");
+
+  res.status(200).json({
+    status: "success",
+    results: lessons.length,
+    data: { lessons },
+  });
 });
 
 // Get single lesson
 export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
-  const lesson = await Lesson.findById(req.params.id).populate("instructor", "name image");
+  const lesson = await Lesson.findById(req.params.id).populate(
+    "instructor",
+    "name image",
+  );
   res.status(200).json({ status: "success", data: { lesson } });
 });
 
@@ -55,7 +69,9 @@ export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
 export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
   if (req.files && (req.files as Express.Multer.File[]).length > 0) {
     const files = req.files as Express.Multer.File[];
-    const uploadedUrls = await Promise.all(files.map(file => uploadToCloudinary(file.buffer)));
+    const uploadedUrls = await Promise.all(
+      files.map((file) => uploadToCloudinary(file.buffer)),
+    );
     req.body.images = uploadedUrls; // replace old images
   }
 

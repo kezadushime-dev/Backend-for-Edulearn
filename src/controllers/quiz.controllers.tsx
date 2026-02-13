@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import { Quiz } from "../models/quiz.model";
 import { Result } from "../models/result.model";
 import { Report } from "../models/report.model";
+import { Lesson } from "../models/lesson.model";
 import { catchAsync } from "../utils/catchAsync";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
@@ -13,10 +15,20 @@ export const createQuiz = catchAsync(async (req: AuthRequest, res: any) => {
     });
   }
 
+  // --- Look up lesson if frontend sends an ID ---
+  let lessonTitle = req.body.lesson; // default: whatever frontend sent
+
+  if (mongoose.Types.ObjectId.isValid(req.body.lesson)) {
+    const lessonDoc = await Lesson.findById(req.body.lesson);
+    if (lessonDoc) {
+      lessonTitle = lessonDoc.title; // replace with the actual lesson title
+    }
+  }
+
   const quiz = await Quiz.create({
     ...req.body,
-    createdBy: req.user.name, // instructor name from JWT
-    lesson: req.body.lesson, // lesson title from request
+    createdBy: req.user.name,
+    lesson: lessonTitle, // always store the lesson title
   });
 
   res.status(201).json({ status: "success", data: { quiz } });

@@ -33,7 +33,7 @@ export const getAllQuizzes = catchAsync(async (req: AuthRequest, res: any) => {
   const formattedQuizzes = quizzes.map((q: any) => ({
     _id: q._id,
     title: q.title,
-    lesson: q.lesson ? q.lesson.title : null, // replace lesson ID with title
+    lesson: q.lesson?.title || null,
     createdBy: q.createdBy,
     questions: q.questions,
     passingScore: q.passingScore,

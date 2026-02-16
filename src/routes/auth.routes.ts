@@ -3,6 +3,7 @@ import * as authController from "../controllers/auth.controllers";
 import { validate } from "../middlewares/validate.middleware";
 import { registerSchema, loginSchema } from "../validations/authValidation";
 import { protect } from "../middlewares/auth.middleware";
+import { upload } from '../middlewares/upload.middleware';
 
 const router = express.Router();
 
@@ -109,24 +110,56 @@ router.get("/me", protect, authController.getMe);
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: false
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Update user name
  *               email:
  *                 type: string
+ *                 description: Update user email
  *               password:
  *                 type: string
+ *                 description: Update user password
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Upload profile image
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                         image:
+ *                           type: string
+ *                           description: Profile image URL
  *       403:
  *         description: Cannot update role
  */
-router.patch("/me", protect, authController.updateMe);
+router.patch('/me', protect, upload.single('image'), authController.updateMe);
 
 /**
  * @swagger

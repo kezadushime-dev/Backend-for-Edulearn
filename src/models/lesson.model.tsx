@@ -14,7 +14,13 @@ const lessonSchema = new mongoose.Schema(
       },
     ],
 
-    videos: [String],
+    videos: [
+      {
+        type: String, // can store either Cloudinary URL or external URL
+      },
+    ],
+    
+    documents: [{ type: String }],
 
     instructor: {
       type: mongoose.Schema.Types.ObjectId,

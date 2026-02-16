@@ -6,7 +6,7 @@ import cloudinary from "../config/claudinary";
 // Helper to upload a single buffer to Cloudinary
 const uploadToCloudinary = (
   fileBuffer: Buffer,
-  resourceType: "image" | "video" | "raw"
+  resourceType: "image" | "video" | "raw",
 ) => {
   return new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
@@ -17,13 +17,12 @@ const uploadToCloudinary = (
       (error, result) => {
         if (error) return reject(error);
         resolve(result?.secure_url!);
-      }
+      },
     );
 
     stream.end(fileBuffer);
   });
 };
-
 
 // Create Lesson
 export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
@@ -35,6 +34,14 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
     documents?: Express.Multer.File[];
   };
 
+  // 🔹 Validation: Only one video source allowed
+  if (files?.video && req.body.videoUrl) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Please provide either a video file or a video URL, not both.",
+    });
+  }
+
   let imageUrls: string[] = [];
   let videoUrl: string | undefined;
   let documentUrls: string[] = [];
@@ -42,26 +49,21 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   // Upload images
   if (files?.images) {
     imageUrls = await Promise.all(
-      files.images.map((file) =>
-        uploadToCloudinary(file.buffer, "image")
-      )
+      files.images.map((file) => uploadToCloudinary(file.buffer, "image")),
     );
   }
 
   // Upload video
   if (files?.video) {
-    videoUrl = await uploadToCloudinary(
-      files.video[0].buffer,
-      "video"
-    );
+    videoUrl = await uploadToCloudinary(files.video[0].buffer, "video");
+  } else if (req.body.videoUrl) {
+    videoUrl = req.body.videoUrl; // external video link
   }
 
   // Upload documents (PDF / DOC)
   if (files?.documents) {
     documentUrls = await Promise.all(
-      files.documents.map((file) =>
-        uploadToCloudinary(file.buffer, "raw")
-      )
+      files.documents.map((file) => uploadToCloudinary(file.buffer, "raw")),
     );
   }
 
@@ -81,7 +83,7 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
 // Get all lessons
 export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
   const lessons = await Lesson.find()
-    .sort({ updatedAt: -1 }) 
+    .sort({ updatedAt: -1 })
     .populate("instructor", "name image");
 
   res.status(200).json({
@@ -108,37 +110,36 @@ export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
     documents?: Express.Multer.File[];
   };
 
+  // 🔹 Validation: Only one video source allowed
+  if (files?.video && req.body.videoUrl) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Please provide either a video file or a video URL, not both.",
+    });
+  }
+
   if (files?.images) {
     req.body.images = await Promise.all(
-      files.images.map((file) =>
-        uploadToCloudinary(file.buffer, "image")
-      )
+      files.images.map((file) => uploadToCloudinary(file.buffer, "image")),
     );
   }
 
   if (files?.video) {
-    req.body.video = await uploadToCloudinary(
-      files.video[0].buffer,
-      "video"
-    );
+    req.body.video = await uploadToCloudinary(files.video[0].buffer, "video");
+  } else if (req.body.videoUrl) {
+    req.body.video = req.body.videoUrl; // external video link
   }
 
   if (files?.documents) {
     req.body.documents = await Promise.all(
-      files.documents.map((file) =>
-        uploadToCloudinary(file.buffer, "raw")
-      )
+      files.documents.map((file) => uploadToCloudinary(file.buffer, "raw")),
     );
   }
 
-  const lesson = await Lesson.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
 
   res.status(200).json({
     status: "success",

@@ -124,6 +124,9 @@ router.get("/:id", getLesson);
  *               video:
  *                 type: string
  *                 format: binary
+ *               videoUrl:
+ *                 type: string
+ *                 description: Optional external video URL (YouTube, Vimeo, etc.)
  *               documents:
  *                 type: array
  *                 items:
@@ -178,6 +181,9 @@ router.post("/", protect, upload.fields([ { name: "images", maxCount: 5 }, { nam
  *               video:
  *                 type: string
  *                 format: binary
+ *               videoUrl:
+ *                 type: string
+ *                 description: Optional external video URL (YouTube, Vimeo, etc.)
  *               documents:
  *                 type: array
  *                 items:

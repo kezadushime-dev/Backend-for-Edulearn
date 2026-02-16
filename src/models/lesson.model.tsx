@@ -14,6 +14,8 @@ const lessonSchema = new mongoose.Schema(
       },
     ],
 
+    videos: [String],
+
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

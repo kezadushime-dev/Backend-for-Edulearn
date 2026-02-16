@@ -4,43 +4,78 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 import cloudinary from "../config/claudinary";
 
 // Helper to upload a single buffer to Cloudinary
-const uploadToCloudinary = (fileBuffer: Buffer) => {
+const uploadToCloudinary = (
+  fileBuffer: Buffer,
+  resourceType: "image" | "video" | "raw"
+) => {
   return new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: "lessons" },
+      {
+        folder: "lessons",
+        resource_type: resourceType,
+      },
       (error, result) => {
         if (error) return reject(error);
         resolve(result?.secure_url!);
-      },
+      }
     );
+
     stream.end(fileBuffer);
   });
 };
+
 
 // Create Lesson
 export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   req.body.instructor = req.user.id;
 
-  // 1️⃣ Check if images are provided
-  if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-    return res
-      .status(400)
-      .json({ status: "fail", message: "At least one image is required" });
+  const files = req.files as {
+    images?: Express.Multer.File[];
+    video?: Express.Multer.File[];
+    documents?: Express.Multer.File[];
+  };
+
+  let imageUrls: string[] = [];
+  let videoUrl: string | undefined;
+  let documentUrls: string[] = [];
+
+  // Upload images
+  if (files?.images) {
+    imageUrls = await Promise.all(
+      files.images.map((file) =>
+        uploadToCloudinary(file.buffer, "image")
+      )
+    );
   }
 
-  // 2️⃣ Upload all images to Cloudinary
-  const files = req.files as Express.Multer.File[];
-  const uploadedUrls = await Promise.all(
-    files.map((file) => uploadToCloudinary(file.buffer)),
-  );
+  // Upload video
+  if (files?.video) {
+    videoUrl = await uploadToCloudinary(
+      files.video[0].buffer,
+      "video"
+    );
+  }
 
-  // 3️⃣ Create lesson with uploaded image URLs
+  // Upload documents (PDF / DOC)
+  if (files?.documents) {
+    documentUrls = await Promise.all(
+      files.documents.map((file) =>
+        uploadToCloudinary(file.buffer, "raw")
+      )
+    );
+  }
+
   const newLesson = await Lesson.create({
     ...req.body,
-    images: uploadedUrls,
+    images: imageUrls,
+    video: videoUrl,
+    documents: documentUrls,
   });
 
-  res.status(201).json({ status: "success", data: { lesson: newLesson } });
+  res.status(201).json({
+    status: "success",
+    data: { lesson: newLesson },
+  });
 });
 
 // Get all lessons
@@ -67,20 +102,48 @@ export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
 
 // Update lesson (optional new images)
 export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
-  if (req.files && (req.files as Express.Multer.File[]).length > 0) {
-    const files = req.files as Express.Multer.File[];
-    const uploadedUrls = await Promise.all(
-      files.map((file) => uploadToCloudinary(file.buffer)),
+  const files = req.files as {
+    images?: Express.Multer.File[];
+    video?: Express.Multer.File[];
+    documents?: Express.Multer.File[];
+  };
+
+  if (files?.images) {
+    req.body.images = await Promise.all(
+      files.images.map((file) =>
+        uploadToCloudinary(file.buffer, "image")
+      )
     );
-    req.body.images = uploadedUrls; // replace old images
   }
 
-  const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  if (files?.video) {
+    req.body.video = await uploadToCloudinary(
+      files.video[0].buffer,
+      "video"
+    );
+  }
 
-  res.status(200).json({ status: "success", data: { lesson } });
+  if (files?.documents) {
+    req.body.documents = await Promise.all(
+      files.documents.map((file) =>
+        uploadToCloudinary(file.buffer, "raw")
+      )
+    );
+  }
+
+  const lesson = await Lesson.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(200).json({
+    status: "success",
+    data: { lesson },
+  });
 });
 
 // Delete lesson

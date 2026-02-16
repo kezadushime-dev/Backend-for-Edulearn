@@ -1,6 +1,6 @@
 import express from "express";
 import { protect, restrictTo } from "../middlewares/auth.middleware";
-import { downloadReport, requestReportDownload, getAllReportRequests } from "../controllers/report.controller";
+import { downloadCertificate, requestCertificateDownload, getAllCertificatesRequests } from "../controllers/report.controller";
 
 const router = express.Router();
 
@@ -8,7 +8,7 @@ const router = express.Router();
  * @swagger
  * /reports/requests:
  *   get:
- *     summary: Get all report download requests (Admin & Instructor)
+ *     summary: Get all certificate download requests (Admin & Instructor)
  *     tags: [Admin]
  *     security:
  *       - bearerAuth: []
@@ -49,17 +49,17 @@ const router = express.Router();
  *       403:
  *         description: Forbidden
  */
-router.get( "/requests", protect, restrictTo("admin", "instructor"), getAllReportRequests);
+router.get( "/requests", protect, restrictTo("admin", "instructor"), getAllCertificatesRequests);
 
 /**
  * @swagger
- * /reports/request-download:
+ * /reports/request-certificate:
  *   patch:
- *     summary: Learner requests report download
+ *     summary: Learner requests certificate download
  *     tags: [Learner]
  *     security:
  *       - bearerAuth: []
- *     description: Learner requests to download their report. Report status becomes "pending" and requires admin/instructor approval.
+ *     description: Learner requests to download their certificate. Report status becomes "pending" and requires admin/instructor approval.
  *     responses:
  *       200:
  *         description: Download request sent successfully
@@ -92,17 +92,17 @@ router.get( "/requests", protect, restrictTo("admin", "instructor"), getAllRepor
  *       403:
  *         description: Forbidden – only learners can request download
  */
-router.patch("/request-download", protect, restrictTo("learner"), requestReportDownload);
+router.patch("/request-certificate", protect, restrictTo("learner"), requestCertificateDownload);
 
 /**
  * @swagger
  * /reports/download:
  *   get:
- *     summary: Download approved learner report as PDF
+ *     summary: Download approved learner certificate as PDF
  *     tags: [Learner]
  *     security:
  *       - bearerAuth: []
- *     description: Returns the learner's report as a PDF file. Report must be approved by admin/instructor.
+ *     description: Returns the learner's certificate as a PDF file. Report must be approved by admin/instructor.
  *     responses:
  *       200:
  *         description: PDF file generated successfully
@@ -140,6 +140,6 @@ router.patch("/request-download", protect, restrictTo("learner"), requestReportD
  *       401:
  *         description: Unauthorized – user must be logged in
  */
-router.get("/download", protect, restrictTo("learner"), downloadReport);
+router.get("/download", protect, restrictTo("learner"), downloadCertificate);
 
 export default router;

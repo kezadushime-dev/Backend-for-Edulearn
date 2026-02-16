@@ -6,6 +6,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   role: "learner" | "instructor" | "admin";
+  isSeedAdmin?: boolean;
   image?: string;
   createdAt: Date;
   passwordResetToken?: string;
@@ -37,6 +38,7 @@ const userSchema = new mongoose.Schema(
       enum: ["learner", "instructor", "admin"],
       default: "learner",
     },
+    isSeedAdmin: { type: Boolean, default: false }, 
     image: { type: String },
     passwordResetToken: String,
     passwordResetExpires: Date,

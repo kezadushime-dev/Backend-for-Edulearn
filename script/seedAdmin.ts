@@ -5,17 +5,17 @@ import { env } from '../src/config/env';
 
 const seedAdmin = async () => {
   try {
-    console.log('🌱 Seeding admin...');
     await connectDB();
-    
+
     const adminExists = await User.findOne({ email: env.ADMIN_EMAIL });
-    
+
     if (!adminExists) {
       await User.create({
         name: 'Head Master',
         email: env.ADMIN_EMAIL,
         password: env.ADMIN_PASSWORD,
         role: 'admin',
+        isSeedAdmin: true, // <-- THIS IS THE NEW FLAG
       });
       console.log('✅ Admin user created successfully.');
     } else {

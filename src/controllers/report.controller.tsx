@@ -1,12 +1,12 @@
 import { Report } from "../models/report.model";
 import { Result } from "../models/result.model";
 import { IUser } from '../models/user.model';
-import { generateReportPDF } from "../utils/generateReportPDF";
+import { generateCertificate } from "../utils/generateReportPDF";
 import { catchAsync } from "../utils/catchAsync";
 import { AuthRequest } from "../middlewares/auth.middleware";
 
 // Admin / Instructor - Get all report requests
-export const getAllReportRequests = catchAsync(
+export const getAllCertificatesRequests = catchAsync(
   async (req: AuthRequest, res: any) => {
     const filter: any = {};
 
@@ -26,8 +26,8 @@ export const getAllReportRequests = catchAsync(
   },
 );
 
-// Request report download
-export const requestReportDownload = catchAsync(async (req: AuthRequest, res: any) => {
+// Request certificate download
+export const requestCertificateDownload = catchAsync(async (req: AuthRequest, res: any) => {
   let report = await Report.findOne({ user: req.user.id });
 
   // Populate quiz and lesson
@@ -83,8 +83,8 @@ export const requestReportDownload = catchAsync(async (req: AuthRequest, res: an
   });
 });
 
-//download report
-export const downloadReport = catchAsync(async (req: AuthRequest, res: any) => {
+//download certificate
+export const downloadCertificate = catchAsync(async (req: AuthRequest, res: any) => {
   const report = await Report.findOne({ user: req.user.id })
     .populate("user", "name email")
     .populate({
@@ -101,15 +101,35 @@ export const downloadReport = catchAsync(async (req: AuthRequest, res: any) => {
     return res.status(403).json({ status: "fail", message: "Report not approved yet" });
   }
 
-  const populatedUser = report.user as IUser;
+  const user = report.user as IUser;
 
-  const pdfBuffer = await generateReportPDF(report);
+  // Build PDF data
+  const certData = {
+    user: { name: user.name },
+    courseName: "Course Completion Certificate",
+    dateAwarded: new Date().toLocaleDateString(),
+    approvedById: report.approvedBy ? report.approvedBy.toString() : undefined
+  };
 
-  res.writeHead(200, {
-    "Content-Type": "application/pdf",
-    "Content-Disposition": `attachment; filename=report_${populatedUser.name}.pdf`,
-    "Content-Length": pdfBuffer.length,
+  // Get PDFDocument stream
+  const doc = await generateCertificate(certData);
+
+  // Stream PDF into buffer chunks
+  const chunks: Buffer[] = [];
+
+  doc.on("data", (chunk: Buffer) => chunks.push(chunk));
+
+  doc.on("end", () => {
+    const pdfBuffer = Buffer.concat(chunks);
+
+    res.writeHead(200, {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=certificate_${user.name}.pdf`,
+      "Content-Length": pdfBuffer.length,
+    });
+
+    res.end(pdfBuffer);
   });
 
-  res.end(pdfBuffer);
+  doc.end();
 });

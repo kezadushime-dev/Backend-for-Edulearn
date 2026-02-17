@@ -1,9 +1,10 @@
 import { Lesson } from "../models/lesson.model";
+import { Course } from "../models/course.model";
 import { catchAsync } from "../utils/catchAsync";
 import { AuthRequest } from "../middlewares/auth.middleware";
 import cloudinary from "../config/claudinary";
 
-// Helper to upload a single buffer to Cloudinary
+// Upload helper
 const uploadToCloudinary = (
   fileBuffer: Buffer,
   resourceType: "image" | "video" | "raw",
@@ -24,9 +25,30 @@ const uploadToCloudinary = (
   });
 };
 
-// Create Lesson
+
+
+// ✅ CREATE LESSON
 export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   req.body.instructor = req.user.id;
+
+  const courseTitle = req.body.course; // now frontend sends title
+
+  if (!courseTitle) {
+    return res.status(400).json({
+      status: "fail",
+      message: "Lesson must belong to a course",
+    });
+  }
+
+  // 🔥 Find course by title instead of id
+  const course = await Course.findOne({ title: courseTitle });
+
+  if (!course) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Course not found",
+    });
+  }
 
   const files = req.files as {
     images?: Express.Multer.File[];
@@ -34,44 +56,45 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
     documents?: Express.Multer.File[];
   };
 
-  // 🔹 Validation: Only one video source allowed
-  if (files?.video && req.body.videoUrl) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide either a video file or a video URL, not both.",
-    });
-  }
-
   let imageUrls: string[] = [];
-  let videoUrl: string | undefined;
+  let videoUrls: string[] = [];
   let documentUrls: string[] = [];
 
-  // Upload images
   if (files?.images) {
     imageUrls = await Promise.all(
-      files.images.map((file) => uploadToCloudinary(file.buffer, "image")),
+      files.images.map((file) =>
+        uploadToCloudinary(file.buffer, "image")
+      )
     );
   }
 
-  // Upload video
   if (files?.video) {
-    videoUrl = await uploadToCloudinary(files.video[0].buffer, "video");
-  } else if (req.body.videoUrl) {
-    videoUrl = req.body.videoUrl; // external video link
+    videoUrls = await Promise.all(
+      files.video.map((file) =>
+        uploadToCloudinary(file.buffer, "video")
+      )
+    );
   }
 
-  // Upload documents (PDF / DOC)
   if (files?.documents) {
     documentUrls = await Promise.all(
-      files.documents.map((file) => uploadToCloudinary(file.buffer, "raw")),
+      files.documents.map((file) =>
+        uploadToCloudinary(file.buffer, "raw")
+      )
     );
   }
 
   const newLesson = await Lesson.create({
     ...req.body,
+    course: course._id, // 🔥 store ID internally
     images: imageUrls,
-    video: videoUrl,
+    videos: videoUrls,
     documents: documentUrls,
+  });
+
+  // Add lesson to course
+  await Course.findByIdAndUpdate(course._id, {
+    $push: { lessons: newLesson._id },
   });
 
   res.status(201).json({
@@ -80,11 +103,14 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-// Get all lessons
+
+
+// ✅ GET ALL LESSONS
 export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
   const lessons = await Lesson.find()
-    .sort({ updatedAt: -1 })
-    .populate("instructor", "name image");
+    .sort({ order: 1 })
+    .populate("instructor", "name image")
+    .populate("course", "title");
 
   res.status(200).json({
     status: "success",
@@ -93,53 +119,13 @@ export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-// Get single lesson
+
+
+// ✅ GET SINGLE LESSON
 export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
-  const lesson = await Lesson.findById(req.params.id).populate(
-    "instructor",
-    "name image",
-  );
-  res.status(200).json({ status: "success", data: { lesson } });
-});
-
-// Update lesson (optional new images)
-export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
-  const files = req.files as {
-    images?: Express.Multer.File[];
-    video?: Express.Multer.File[];
-    documents?: Express.Multer.File[];
-  };
-
-  // 🔹 Validation: Only one video source allowed
-  if (files?.video && req.body.videoUrl) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Please provide either a video file or a video URL, not both.",
-    });
-  }
-
-  if (files?.images) {
-    req.body.images = await Promise.all(
-      files.images.map((file) => uploadToCloudinary(file.buffer, "image")),
-    );
-  }
-
-  if (files?.video) {
-    req.body.video = await uploadToCloudinary(files.video[0].buffer, "video");
-  } else if (req.body.videoUrl) {
-    req.body.video = req.body.videoUrl; // external video link
-  }
-
-  if (files?.documents) {
-    req.body.documents = await Promise.all(
-      files.documents.map((file) => uploadToCloudinary(file.buffer, "raw")),
-    );
-  }
-
-  const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-    runValidators: true,
-  });
+  const lesson = await Lesson.findById(req.params.id)
+    .populate("instructor", "name image")
+    .populate("course", "title description");
 
   res.status(200).json({
     status: "success",
@@ -147,8 +133,74 @@ export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-// Delete lesson
+
+
+// ✅ UPDATE LESSON
+export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
+  const files = req.files as {
+    images?: Express.Multer.File[];
+    video?: Express.Multer.File[];
+    documents?: Express.Multer.File[];
+  };
+
+  if (files?.images) {
+    req.body.images = await Promise.all(
+      files.images.map((file) =>
+        uploadToCloudinary(file.buffer, "image")
+      )
+    );
+  }
+
+  if (files?.video) {
+    req.body.videos = await Promise.all(
+      files.video.map((file) =>
+        uploadToCloudinary(file.buffer, "video")
+      )
+    );
+  }
+
+  if (files?.documents) {
+    req.body.documents = await Promise.all(
+      files.documents.map((file) =>
+        uploadToCloudinary(file.buffer, "raw")
+      )
+    );
+  }
+
+  const lesson = await Lesson.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true, runValidators: true }
+  );
+
+  res.status(200).json({
+    status: "success",
+    data: { lesson },
+  });
+});
+
+
+
+// ✅ DELETE LESSON
 export const deleteLesson = catchAsync(async (req: AuthRequest, res: any) => {
+  const lesson = await Lesson.findById(req.params.id);
+
+  if (!lesson) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Lesson not found",
+    });
+  }
+
+  // 🔥 Remove from course
+  await Course.findByIdAndUpdate(lesson.course, {
+    $pull: { lessons: lesson._id },
+  });
+
   await Lesson.findByIdAndDelete(req.params.id);
-  res.status(204).json({ status: "success", data: null });
+
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
 });

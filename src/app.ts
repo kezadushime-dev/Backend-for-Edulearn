@@ -12,6 +12,7 @@ import AuthRoutes from './routes/auth.routes';
 import lessonRoutes from './routes/lesson.routes';
 import quizRoutes from './routes/quiz.routes';
 import reportRoutes from './routes/report.routes';
+import progressRoutes from "./routes/progress.route";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/v1/auth', AuthRoutes)
 app.use('/api/v1/lessons', lessonRoutes);
 app.use('/api/v1/quizzes', quizRoutes);
 app.use("/api/v1/reports", reportRoutes);
+app.use("/api/v1/progress", progressRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {

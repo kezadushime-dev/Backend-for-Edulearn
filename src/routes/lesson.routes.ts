@@ -19,7 +19,6 @@ const router = express.Router();
  *       type: http
  *       scheme: bearer
  *       bearerFormat: JWT
- *
  *   schemas:
  *     Lesson:
  *       type: object
@@ -38,8 +37,19 @@ const router = express.Router();
  *           type: array
  *           items:
  *             type: string
+ *         videos:
+ *           type: array
+ *           items:
+ *             type: string
+ *         documents:
+ *           type: array
+ *           items:
+ *             type: string
  *         instructor:
  *           type: string
+ *         course:
+ *           type: string
+ *           description: Course title
  *         order:
  *           type: number
  */
@@ -105,6 +115,7 @@ router.get("/:id", getLesson);
  *               - description
  *               - content
  *               - category
+ *               - course
  *             properties:
  *               title:
  *                 type: string
@@ -114,6 +125,9 @@ router.get("/:id", getLesson);
  *                 type: string
  *               category:
  *                 type: string
+ *               course:
+ *                 type: string
+ *                 description: Course title (backend will resolve to ID)
  *               order:
  *                 type: number
  *               images:
@@ -135,13 +149,25 @@ router.get("/:id", getLesson);
  *     responses:
  *       201:
  *         description: Lesson created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Lesson'
  *       400:
  *         description: Validation error
  *       401:
  *         description: Unauthorized
  */
-
-router.post("/", protect, upload.fields([ { name: "images", maxCount: 5 }, { name: "video", maxCount: 1 }, { name: "documents", maxCount: 5 }, ]), createLesson);
+router.post(
+  "/",
+  protect,
+  upload.fields([
+    { name: "images", maxCount: 5 },
+    { name: "video", maxCount: 1 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  createLesson
+);
 
 /**
  * @swagger
@@ -171,6 +197,9 @@ router.post("/", protect, upload.fields([ { name: "images", maxCount: 5 }, { nam
  *                 type: string
  *               category:
  *                 type: string
+ *               course:
+ *                 type: string
+ *                 description: Course title
  *               order:
  *                 type: number
  *               images:
@@ -183,7 +212,6 @@ router.post("/", protect, upload.fields([ { name: "images", maxCount: 5 }, { nam
  *                 format: binary
  *               videoUrl:
  *                 type: string
- *                 description: Optional external video URL (YouTube, Vimeo, etc.)
  *               documents:
  *                 type: array
  *                 items:
@@ -192,13 +220,25 @@ router.post("/", protect, upload.fields([ { name: "images", maxCount: 5 }, { nam
  *     responses:
  *       200:
  *         description: Lesson updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Lesson'
  *       401:
  *         description: Unauthorized
  *       404:
  *         description: Lesson not found
  */
-
-router.patch("/:id", protect, upload.fields([ { name: "images", maxCount: 5 }, { name: "video", maxCount: 1 }, { name: "documents", maxCount: 5 }, ]), updateLesson);
+router.patch(
+  "/:id",
+  protect,
+  upload.fields([
+    { name: "images", maxCount: 5 },
+    { name: "video", maxCount: 1 },
+    { name: "documents", maxCount: 5 },
+  ]),
+  updateLesson
+);
 
 /**
  * @swagger

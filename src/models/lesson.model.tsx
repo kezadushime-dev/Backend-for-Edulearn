@@ -28,6 +28,12 @@ const lessonSchema = new mongoose.Schema(
       required: true,
     },
 
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: [true, "Lesson must belong to a course"],
+    },
+
     order: { type: Number, default: 0 },
 
     category: { type: String, required: true },

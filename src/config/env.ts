@@ -7,6 +7,7 @@ const envSchema = z.object({
   PORT: z.string().default('5000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   MONGODB_URI: z.string().min(1),
+  MONGODB_URI_FALLBACK: z.string().optional(),
   JWT_SECRET: z.string().min(8),
   JWT_EXPIRES_IN: z.string().default('7d'),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),

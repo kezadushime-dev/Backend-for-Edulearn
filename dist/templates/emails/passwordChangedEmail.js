@@ -18,26 +18,25 @@ const passwordChangedEmailTemplate = (name) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>✓ Password Changed Successfully</h1>
+      <h1>Ijambo banga ryahinduwe neza</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>Your password has been successfully changed.</p>
+      <h2>Muraho ${name},</h2>
+      <p>Ijambo banga rya konti yawe ryahinduwe neza.</p>
       <div class="info">
-        <strong>ℹ️ What happened?</strong>
-        <p>Your account password was updated on ${new Date().toLocaleString()}.</p>
+        <strong>Ibyabaye:</strong>
+        <p>Konti yawe yahinduye ijambo banga ku wa ${new Date().toLocaleString()}.</p>
       </div>
-      <p>If you made this change, no further action is needed.</p>
-      <p><strong>If you didn't make this change:</strong></p>
+      <p>Niba ari wowe wabikoze, nta kindi gisabwa.</p>
+      <p><strong>Niba atari wowe:</strong></p>
       <ul>
-        <li>Your account may be compromised</li>
-        <li>Please contact our support team immediately</li>
-        <li>Consider enabling additional security measures</li>
+        <li>Konti yawe ishobora kuba iri mu kaga</li>
+        <li>Twandikire vuba bishoboka</li>
       </ul>
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

@@ -34,6 +34,16 @@ const router = express.Router();
  *               password:
  *                 type: string
  *                 minLength: 8
+ *               country:
+ *                 type: string
+ *               field:
+ *                 type: string
+ *               province:
+ *                 type: string
+ *               church:
+ *                 type: string
+ *               club:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -125,6 +135,21 @@ router.get("/me", protect, authController.getMe);
  *               password:
  *                 type: string
  *                 description: Update user password
+ *               country:
+ *                 type: string
+ *                 description: Update country
+ *               field:
+ *                 type: string
+ *                 description: Update field
+ *               province:
+ *                 type: string
+ *                 description: Update province
+ *               church:
+ *                 type: string
+ *                 description: Update church
+ *               club:
+ *                 type: string
+ *                 description: Update club
  *               image:
  *                 type: string
  *                 format: binary

@@ -1,13 +1,26 @@
-import mongoose, { Document, Types } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import bcrypt from "bcryptjs";
+
+export type UserRole = "user" | "leader" | "admin" | "learner" | "instructor";
 
 export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  role: "learner" | "instructor" | "admin";
+  role: UserRole;
   isSeedAdmin?: boolean;
   image?: string;
+  avatarUrl?: string;
+  country?: string;
+  field?: string;
+  province?: string;
+  church?: string;
+  club?: string;
+  region?: string;
+  district?: string;
+  conference?: string;
+  ageGroup?: string;
+  lastActiveAt?: Date;
   createdAt: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
@@ -35,11 +48,22 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["learner", "instructor", "admin"],
-      default: "learner",
+      enum: ["user", "leader", "admin", "learner", "instructor"],
+      default: "user",
     },
-    isSeedAdmin: { type: Boolean, default: false }, 
+    isSeedAdmin: { type: Boolean, default: false },
     image: { type: String },
+    avatarUrl: { type: String },
+    country: { type: String },
+    field: { type: String },
+    province: { type: String },
+    church: { type: String },
+    club: { type: String },
+    region: { type: String },
+    district: { type: String },
+    conference: { type: String },
+    ageGroup: { type: String },
+    lastActiveAt: { type: Date, default: Date.now },
     passwordResetToken: String,
     passwordResetExpires: Date,
   },

@@ -38,7 +38,7 @@ export const createUser = catchAsync(async (req: any, res: any, next: any) => {
   const { name, email, password, role } = req.body;
 
   // 1. Validate roles
-  const allowedRoles = ["learner", "instructor", "admin"];
+  const allowedRoles = ["user", "leader", "admin", "learner", "instructor"];
   if (!allowedRoles.includes(role)) {
     return next(new AppError("Invalid role", 400));
   }
@@ -118,7 +118,11 @@ export const deleteUser = catchAsync(async (req: any, res: any, next: any) => {
 // Get users by role
 export const getUsersByRole = catchAsync(async (req: any, res: any) => {
   const { role } = req.params;
-  const users = await User.find({ role }).select("-password");
+  let filter: any = { role };
+  if (role === "user") filter = { role: { $in: ["user", "learner"] } };
+  if (role === "leader") filter = { role: { $in: ["leader", "instructor"] } };
+
+  const users = await User.find(filter).select("-password");
   res.status(200).json({
     status: "success",
     results: users.length,
@@ -129,8 +133,8 @@ export const getUsersByRole = catchAsync(async (req: any, res: any) => {
 // Get platform statistics
 export const getStatistics = catchAsync(async (req: any, res: any) => {
   const totalUsers = await User.countDocuments();
-  const learners = await User.countDocuments({ role: "learner" });
-  const instructors = await User.countDocuments({ role: "instructor" });
+  const users = await User.countDocuments({ role: { $in: ["user", "learner"] } });
+  const leaders = await User.countDocuments({ role: { $in: ["leader", "instructor"] } });
   const admins = await User.countDocuments({ role: "admin" });
 
   res.status(200).json({
@@ -138,8 +142,8 @@ export const getStatistics = catchAsync(async (req: any, res: any) => {
     data: {
       statistics: {
         totalUsers,
-        learners,
-        instructors,
+        users,
+        leaders,
         admins,
       },
     },

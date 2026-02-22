@@ -14,6 +14,11 @@ const multerFilter = (req: any, file: any, cb: any) => {
     cb(null, true);
   }
 
+  // Allow audio
+  else if (file.mimetype.startsWith("audio")) {
+    cb(null, true);
+  }
+
   // Allow PDF
   else if (file.mimetype === "application/pdf") {
     cb(null, true);
@@ -32,7 +37,7 @@ const multerFilter = (req: any, file: any, cb: any) => {
   else {
     cb(
       new AppError(
-        "Unsupported file type! Only images, videos, PDF, and DOC files are allowed.",
+        "Unsupported file type! Only images, videos, audio, PDF, and DOC files are allowed.",
         400
       ),
       false

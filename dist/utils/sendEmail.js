@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendProfileUpdatedEmail = exports.sendAccountDeletedByAdminEmail = exports.sendRoleUpdatedEmail = exports.sendAccountDeletedEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendWelcomeEmail = exports.sendEmail = void 0;
+exports.sendProfileUpdatedEmail = exports.sendReportApprovedEmail = exports.sendAccountDeletedByAdminEmail = exports.sendRoleUpdatedEmail = exports.sendAccountDeletedEmail = exports.sendPasswordChangedEmail = exports.sendPasswordResetEmail = exports.sendWelcomeEmail = exports.sendEmail = void 0;
 const nodemailer_1 = require("../config/nodemailer");
 const sendEmail = async (options) => {
     await (0, nodemailer_1.sendEmail)(options.email, options.subject, options.html || options.message || '');
@@ -43,7 +43,7 @@ const sendWelcomeEmail = async (email, name) => {
     const { welcomeEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/welcomeEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Welcome to Digital Learning Platform',
+        subject: 'Murakaza neza muri Adventits youth Ministry Rwanda',
         html: welcomeEmailTemplate(name),
     });
 };
@@ -52,7 +52,7 @@ const sendPasswordResetEmail = async (email, name, resetURL) => {
     const { passwordResetEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/passwordResetEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Password Reset Request',
+        subject: 'Ubusabe bwo guhindura ijambo banga',
         html: passwordResetEmailTemplate(name, resetURL),
     });
 };
@@ -61,7 +61,7 @@ const sendPasswordChangedEmail = async (email, name) => {
     const { passwordChangedEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/passwordChangedEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Password Changed Successfully',
+        subject: 'Ijambo banga ryahinduwe neza',
         html: passwordChangedEmailTemplate(name),
     });
 };
@@ -70,7 +70,7 @@ const sendAccountDeletedEmail = async (email, name) => {
     const { accountDeletedEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/accountDeletedEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Account Deleted',
+        subject: 'Konti yawe yasibwe',
         html: accountDeletedEmailTemplate(name),
     });
 };
@@ -79,7 +79,7 @@ const sendRoleUpdatedEmail = async (email, name, newRole) => {
     const { roleUpdatedEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/roleUpdatedEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Your Role Has Been Updated',
+        subject: 'Uruhare rwawe rwahinduwe',
         html: roleUpdatedEmailTemplate(name, newRole),
     });
 };
@@ -88,16 +88,25 @@ const sendAccountDeletedByAdminEmail = async (email, name) => {
     const { accountDeletedByAdminEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/accountDeletedByAdminEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Account Deleted by Administrator',
+        subject: 'Konti yawe yasibwe n ubuyobozi',
         html: accountDeletedByAdminEmailTemplate(name),
     });
 };
 exports.sendAccountDeletedByAdminEmail = sendAccountDeletedByAdminEmail;
+const sendReportApprovedEmail = async (email, name) => {
+    const { reportApprovedEmailTemplate } = await Promise.resolve().then(() => __importStar(require("../templates/emails/sendReportApprovedEmail")));
+    await (0, exports.sendEmail)({
+        email,
+        subject: "Ubusabe bwawe bwo gukuramo raporo bwemejwe",
+        html: reportApprovedEmailTemplate(name),
+    });
+};
+exports.sendReportApprovedEmail = sendReportApprovedEmail;
 const sendProfileUpdatedEmail = async (email, name, updatedFields) => {
     const { profileUpdatedEmailTemplate } = await Promise.resolve().then(() => __importStar(require('../templates/emails/profileUpdatedEmail')));
     await (0, exports.sendEmail)({
         email,
-        subject: 'Profile Updated Successfully',
+        subject: 'Umwirondoro wawe wavuguruwe',
         html: profileUpdatedEmailTemplate(name, updatedFields),
     });
 };

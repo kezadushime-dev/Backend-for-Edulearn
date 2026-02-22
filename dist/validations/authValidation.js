@@ -28,6 +28,17 @@ exports.registerSchema = joi_1.default.object({
         "string.min": "Password must be at least 8 characters",
         "string.pattern.base": "Password must contain letters and numbers",
     }),
+    role: joi_1.default.string().valid("user", "leader", "learner", "instructor").optional(),
+    avatarUrl: joi_1.default.string().uri().optional(),
+    country: joi_1.default.string().allow("").optional(),
+    field: joi_1.default.string().allow("").optional(),
+    province: joi_1.default.string().allow("").optional(),
+    church: joi_1.default.string().allow("").optional(),
+    club: joi_1.default.string().allow("").optional(),
+    region: joi_1.default.string().allow("").optional(),
+    district: joi_1.default.string().allow("").optional(),
+    conference: joi_1.default.string().allow("").optional(),
+    ageGroup: joi_1.default.string().allow("").optional(),
 });
 exports.loginSchema = joi_1.default.object({
     email: joi_1.default.string().email().required(),

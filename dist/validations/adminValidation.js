@@ -7,10 +7,10 @@ exports.adminCreateUserSchema = exports.updateRoleSchema = void 0;
 const joi_1 = __importDefault(require("joi"));
 exports.updateRoleSchema = joi_1.default.object({
     role: joi_1.default.string()
-        .valid("learner", "instructor", "admin")
+        .valid("user", "leader", "admin", "learner", "instructor")
         .required()
         .messages({
-        "any.only": "Role must be learner, instructor or admin",
+        "any.only": "Role must be user, leader or admin",
     }),
 });
 exports.adminCreateUserSchema = joi_1.default.object({
@@ -18,6 +18,6 @@ exports.adminCreateUserSchema = joi_1.default.object({
     email: joi_1.default.string().email().required(),
     password: joi_1.default.string().min(8).required(),
     role: joi_1.default.string()
-        .valid("learner", "instructor", "admin")
+        .valid("user", "leader", "admin", "learner", "instructor")
         .required(),
 });

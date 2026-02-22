@@ -16,23 +16,23 @@ export const passwordResetEmailTemplate = (name: string, resetURL: string): stri
 <body>
   <div class="container">
     <div class="header">
-      <h1>Password Reset Request</h1>
+      <h1>Gusubiramo ijambo banga</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>We received a request to reset your password for your Digital Learning Platform account.</p>
-      <p>Click the button below to reset your password:</p>
-      <a href="${resetURL}" class="button">Reset Password</a>
-      <p>Or copy and paste this link into your browser:</p>
+      <h2>Muraho ${name},</h2>
+      <p>Twakiriye ubusabe bwo guhindura ijambo banga rya konti yawe.</p>
+      <p>Kanda kuri buto ikurikira kugirango ushyireho ijambo banga rishya:</p>
+      <a href="${resetURL}" class="button">Hindura ijambo banga</a>
+      <p>Cyangwa kopi iyi link uyishyire muri browser yawe:</p>
       <p style="word-break: break-all; color: #4F46E5;">${resetURL}</p>
       <div class="warning">
-        <strong>⚠️ Security Notice:</strong>
-        <p>This link will expire in 10 minutes. If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+        <strong>Itangazo ry'umutekano:</strong>
+        <p>Iyi link izarangira mu minota 10. Niba atari wowe wayisabye, wirengagize ubu butumwa.</p>
       </div>
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

@@ -1,6 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.roleUpdatedEmailTemplate = void 0;
+const roleToKinyarwanda = (role) => {
+    const normalized = role.toLowerCase();
+    if (normalized === "admin")
+        return "Admin";
+    if (normalized === "leader" || normalized === "instructor")
+        return "Umuyobozi";
+    if (normalized === "user" || normalized === "learner")
+        return "Umukoresha";
+    return role;
+};
 const roleUpdatedEmailTemplate = (name, newRole) => {
     return `
 <!DOCTYPE html>
@@ -18,18 +28,18 @@ const roleUpdatedEmailTemplate = (name, newRole) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Role Updated</h1>
+      <h1>Uruhare rwawe rwahinduwe</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>Your account role has been updated by an administrator.</p>
-      <p>Your new role is: <span class="role-badge">${newRole.toUpperCase()}</span></p>
-      <p>This change may affect your access permissions and available features on the platform.</p>
-      <p>If you have any questions about your new role, please contact support.</p>
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <h2>Muraho ${name},</h2>
+      <p>Uruhare rwa konti yawe rwahinduwe n'ubuyobozi.</p>
+      <p>Uruhare rushya ni: <span class="role-badge">${roleToKinyarwanda(newRole)}</span></p>
+      <p>Ibi bishobora guhindura uburenganzira n'ibyo wemerewe gukoresha kuri platform.</p>
+      <p>Niba hari ibyo ushaka kubaza, twandikire.</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

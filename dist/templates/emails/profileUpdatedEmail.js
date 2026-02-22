@@ -19,22 +19,22 @@ const profileUpdatedEmailTemplate = (name, updatedFields) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Profile Updated</h1>
+      <h1>Umwirondoro wavuguruwe</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>Your profile has been successfully updated.</p>
+      <h2>Muraho ${name},</h2>
+      <p>Umwirondoro wawe wavuguruwe neza.</p>
       <div class="info">
-        <strong>📝 Updated Information:</strong>
+        <strong>Ibyahinduwe:</strong>
         <ul>
           ${updatedFields.map(field => `<li>${field}</li>`).join('')}
         </ul>
       </div>
-      <p>If you didn't make these changes, please contact support immediately.</p>
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <p>Niba atari wowe wabikoze, twandikire ako kanya.</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

@@ -7,34 +7,42 @@ exports.User = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const userSchema = new mongoose_1.default.Schema({
-    name: { type: String, required: [true, 'Name is required'] },
+    name: { type: String, required: [true, "Name is required"] },
     email: {
         type: String,
-        required: [true, 'Email is required'],
+        required: [true, "Email is required"],
         unique: true,
-        lowercase: true
+        lowercase: true,
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
+        required: [true, "Password is required"],
         minlength: 8,
-        select: false
+        select: false,
     },
     role: {
         type: String,
-        enum: ['learner', 'instructor', 'admin'],
-        default: 'learner'
+        enum: ["user", "leader", "admin", "learner", "instructor"],
+        default: "user",
     },
-    image: {
-        type: String,
-        required: false
-    },
+    isSeedAdmin: { type: Boolean, default: false },
+    image: { type: String },
+    avatarUrl: { type: String },
+    country: { type: String },
+    field: { type: String },
+    province: { type: String },
+    church: { type: String },
+    club: { type: String },
+    region: { type: String },
+    district: { type: String },
+    conference: { type: String },
+    ageGroup: { type: String },
+    lastActiveAt: { type: Date, default: Date.now },
     passwordResetToken: String,
     passwordResetExpires: Date,
-    createdAt: { type: Date, default: Date.now }
-});
-userSchema.pre('save', async function (next) {
-    if (!this.isModified('password'))
+}, { timestamps: true });
+userSchema.pre("save", async function (next) {
+    if (!this.isModified("password"))
         return next();
     this.password = await bcryptjs_1.default.hash(this.password, 12);
     next();
@@ -43,10 +51,13 @@ userSchema.methods.correctPassword = async function (candidatePassword, userPass
     return await bcryptjs_1.default.compare(candidatePassword, userPassword);
 };
 userSchema.methods.createPasswordResetToken = function () {
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const crypto = require("crypto");
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    this.passwordResetToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+    this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000);
     return resetToken;
 };
-exports.User = mongoose_1.default.model('User', userSchema);
+exports.User = mongoose_1.default.model("User", userSchema);

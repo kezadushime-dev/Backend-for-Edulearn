@@ -3,10 +3,11 @@ import {
   createLesson,
   getAllLessons,
   getLesson,
+  getLessonModules,
   updateLesson,
   deleteLesson,
 } from "../controllers/lesson.controllers";
-import { protect } from "../middlewares/auth.middleware";
+import { protect, restrictTo } from "../middlewares/auth.middleware";
 import { upload } from "../middlewares/upload.middleware";
 
 const router = express.Router();
@@ -33,6 +34,7 @@ const router = express.Router();
  *           type: string
  *         category:
  *           type: string
+ *           example: Spiritual
  *         images:
  *           type: array
  *           items:
@@ -45,6 +47,21 @@ const router = express.Router();
  *           type: array
  *           items:
  *             type: string
+ *         audios:
+ *           type: array
+ *           items:
+ *             type: string
+ *         durationMinutes:
+ *           type: number
+ *           example: 30
+ *         modules:
+ *           type: array
+ *           items:
+ *             type: object
+ *         quiz:
+ *           type: object
+ *         interactiveElements:
+ *           type: object
  *         instructor:
  *           type: string
  *         course:
@@ -98,6 +115,52 @@ router.get("/:id", getLesson);
 
 /**
  * @swagger
+ * /lessons/{id}/modules:
+ *   get:
+ *     tags: [Lessons]
+ *     summary: Get module-focused lesson view
+ *     description: Returns modules, lesson quiz and interactive elements for module-based frontend pages.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Lesson modules retrieved successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               data:
+ *                 lessonId: 67ba00011122233344455577
+ *                 title: Lesson 1 - Origins of Adventism in Rwanda
+ *                 modules:
+ *                   - moduleTitle: Module 1 - Missionary Arrival
+ *                     order: 1
+ *                     content:
+ *                       text: The Adventist message first arrived in Rwanda through missionaries.
+ *                       image: https://cdn.example.com/adventist_timeline.png
+ *                       video: https://cdn.example.com/church_history.mp4
+ *                       audio: https://cdn.example.com/sermon_clip.mp3
+ *                     questions:
+ *                       - type: multiple-choice
+ *                         question: In which decade did Adventism first arrive in Rwanda?
+ *                         options: ["1920s", "1930s", "1940s"]
+ *                         answer: "1920s"
+ *                 quiz:
+ *                   questions:
+ *                     - type: true-false
+ *                       question: Adventism reached Rwanda in the 1940s.
+ *                       answer: false
+ *       404:
+ *         description: Lesson not found
+ */
+router.get("/:id/modules", getLessonModules);
+
+/**
+ * @swagger
  * /lessons:
  *   post:
  *     tags: [Lessons]
@@ -130,6 +193,20 @@ router.get("/:id", getLesson);
  *                 description: Course title (backend will resolve to ID)
  *               order:
  *                 type: number
+ *               durationMinutes:
+ *                 type: number
+ *               modules:
+ *                 type: string
+ *                 description: JSON string array of modules
+ *                 example: '[{"moduleTitle":"Module 1: What is HTML?","order":1,"content":{"text":"HTML is the standard markup language.","image":"https://cdn.example.com/html_structure.png","video":"https://cdn.example.com/intro_html.mp4","audio":"https://cdn.example.com/html_explanation.mp3"},"questions":[{"type":"multiple-choice","question":"What does HTML stand for?","options":["Hyper Text Markup Language","High Tech Modern Language","Home Tool Markup Language"],"answer":"Hyper Text Markup Language"}]}]'
+ *               quiz:
+ *                 type: string
+ *                 description: JSON string object for lesson-end quiz
+ *                 example: '{"questions":[{"type":"true-false","question":"HTML is used to style web pages.","answer":"False"}],"passingScore":70}'
+ *               interactiveElements:
+ *                 type: string
+ *                 description: JSON object string with discussion/practical/spiritual prompts
+ *                 example: '{"discussionPrompts":["Share one key learning point"],"practicalAssignments":["Build a simple HTML page"],"spiritualReflections":["Write one personal reflection"]}'
  *               images:
  *                 type: array
  *                 items:
@@ -142,6 +219,11 @@ router.get("/:id", getLesson);
  *                 type: string
  *                 description: Optional external video URL (YouTube, Vimeo, etc.)
  *               documents:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               audio:
  *                 type: array
  *                 items:
  *                   type: string
@@ -161,9 +243,11 @@ router.get("/:id", getLesson);
 router.post(
   "/",
   protect,
+  restrictTo("leader", "admin", "instructor"),
   upload.fields([
     { name: "images", maxCount: 5 },
     { name: "video", maxCount: 1 },
+    { name: "audio", maxCount: 5 },
     { name: "documents", maxCount: 5 },
   ]),
   createLesson
@@ -202,6 +286,18 @@ router.post(
  *                 description: Course title
  *               order:
  *                 type: number
+ *               durationMinutes:
+ *                 type: number
+ *               modules:
+ *                 type: string
+ *                 description: JSON array string
+ *                 example: '[{"moduleTitle":"Module 1: Balanced Diet","order":1,"content":{"text":"A balanced diet includes proteins, carbohydrates, fats, vitamins, and minerals."}}]'
+ *               quiz:
+ *                 type: string
+ *                 example: '{"questions":[{"type":"multiple-choice","question":"Which nutrient is the main source of energy?","options":["Proteins","Carbohydrates","Fats"],"answer":"Carbohydrates"}]}'
+ *               interactiveElements:
+ *                 type: string
+ *                 example: '{"discussionPrompts":["How can youth improve nutrition habits?"],"practicalAssignments":["Track your meals for 7 days"],"spiritualReflections":["Pray for discipline in healthy living"]}'
  *               images:
  *                 type: array
  *                 items:
@@ -213,6 +309,11 @@ router.post(
  *               videoUrl:
  *                 type: string
  *               documents:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *               audio:
  *                 type: array
  *                 items:
  *                   type: string
@@ -232,9 +333,11 @@ router.post(
 router.patch(
   "/:id",
   protect,
+  restrictTo("leader", "admin", "instructor"),
   upload.fields([
     { name: "images", maxCount: 5 },
     { name: "video", maxCount: 1 },
+    { name: "audio", maxCount: 5 },
     { name: "documents", maxCount: 5 },
   ]),
   updateLesson
@@ -262,6 +365,6 @@ router.patch(
  *       404:
  *         description: Lesson not found
  */
-router.delete("/:id", protect, deleteLesson);
+router.delete("/:id", protect, restrictTo("leader", "admin", "instructor"), deleteLesson);
 
 export default router;

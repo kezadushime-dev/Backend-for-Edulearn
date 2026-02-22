@@ -6,6 +6,8 @@ const userCourseProgressSchema = new mongoose.Schema(
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course", required: true },
     completedLessons: [{ type: mongoose.Schema.Types.ObjectId, ref: "Lesson" }],
     progress: { type: Number, default: 0 }, // 0 - 100%
+    totalMinutes: { type: Number, default: 0 },
+    lastAccessedAt: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );

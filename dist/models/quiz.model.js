@@ -14,13 +14,13 @@ const questionSchema = new mongoose_1.default.Schema({
     points: { type: Number, default: 1 },
 });
 const quizSchema = new mongoose_1.default.Schema({
-    lesson: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Lesson", required: true },
+    lesson: { type: String, required: true },
     title: { type: String, required: true },
     questions: [questionSchema],
     passingScore: { type: Number, default: 70 },
     isActive: { type: Boolean, default: true },
-    createdBy: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }, // optional: who created quiz
+    createdBy: { type: String, required: true }, // optional: who created quiz
 }, {
-    timestamps: true, // adds createdAt and updatedAt automatically
+    timestamps: true,
 });
 exports.Quiz = mongoose_1.default.model('Quiz', quizSchema);

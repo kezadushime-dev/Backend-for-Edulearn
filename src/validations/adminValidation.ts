@@ -2,10 +2,10 @@ import Joi from "joi";
 
 export const updateRoleSchema = Joi.object({
   role: Joi.string()
-    .valid("learner", "instructor", "admin")
+    .valid("user", "leader", "admin", "learner", "instructor")
     .required()
     .messages({
-      "any.only": "Role must be learner, instructor or admin",
+      "any.only": "Role must be user, leader or admin",
     }),
 });
 
@@ -16,6 +16,6 @@ export const adminCreateUserSchema = Joi.object({
   password: Joi.string().min(8).required(),
 
   role: Joi.string()
-    .valid("learner", "instructor", "admin")
+    .valid("user", "leader", "admin", "learner", "instructor")
     .required(),
 });

@@ -43,52 +43,12 @@ const router = express_1.default.Router();
 router.use(auth_middleware_1.protect);
 /**
  * @swagger
- * components:
- *   securitySchemes:
- *     BearerAuth:
- *       type: http
- *       scheme: bearer
- *       bearerFormat: JWT
- *
- *   schemas:
- *     Question:
- *       type: object
- *       required:
- *         - questionText
- *         - options
- *         - correctOptionIndex
- *       properties:
- *         questionText:
- *           type: string
- *           example: "What is Node.js?"
- *         image:
- *           type: string
- *           example: "https://example.com/question1.png"
- *         options:
- *           type: array
- *           items:
- *             type: string
- *             example: "JavaScript runtime"
- *         optionImages:
- *           type: array
- *           items:
- *             type: string
- *             example: "https://example.com/option1.png"
- *         correctOptionIndex:
- *           type: integer
- *           example: 0
- *         points:
- *           type: number
- *           example: 1
- */
-/**
- * @swagger
  * /quizzes:
  *   post:
  *     summary: Create a new quiz
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -102,20 +62,78 @@ router.use(auth_middleware_1.protect);
  *             properties:
  *               lesson:
  *                 type: string
+ *                 example: "63f7e3c9b7f5a9c1d2a1b100"
  *               title:
  *                 type: string
+ *                 example: "Node.js Basics Quiz"
  *               questions:
  *                 type: array
  *                 items:
- *                   $ref: '#/components/schemas/Question'
+ *                   type: object
+ *                   properties:
+ *                     questionText:
+ *                       type: string
+ *                       example: "What is Node.js?"
+ *                     options:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["JavaScript runtime", "Database", "Framework", "Library"]
+ *                     correctOptionIndex:
+ *                       type: number
+ *                       example: 0
+ *                     points:
+ *                       type: number
+ *                       example: 1
+ *                     image:
+ *                       type: string
+ *                       example: "https://example.com/question1.png"
+ *                     optionImages:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       example: ["https://example.com/option1.png"]
  *               passingScore:
  *                 type: number
  *                 default: 70
  *               isActive:
  *                 type: boolean
+ *                 default: true
  *     responses:
  *       201:
  *         description: Quiz created successfully
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               data:
+ *                 quiz:
+ *                   _id: 63f7e3c9b7f5a9c1d2a1b234
+ *                   lesson: "63f7e3c9b7f5a9c1d2a1b100"
+ *                   title: "Node.js Basics Quiz"
+ *                   questions:
+ *                     - questionText: "What is Node.js?"
+ *                       options: ["JavaScript runtime", "Database", "Framework", "Library"]
+ *                       correctOptionIndex: 0
+ *                       points: 1
+ *                       image: "https://example.com/question1.png"
+ *                       optionImages: ["https://example.com/option1.png"]
+ *                   passingScore: 70
+ *                   isActive: true
+ *                   createdBy:
+ *                     _id: 63f7e3c9b7f5a9c1d2a1b999
+ *                     name: "John Doe"
+ *                     email: "john@example.com"
+ *                   createdAt: "2026-02-05T09:00:00.000Z"
+ *                   updatedAt: "2026-02-05T09:30:00.000Z"
+ *       400:
+ *         description: Validation error (missing fields or invalid data)
+ *       401:
+ *         description: Unauthorized – missing or invalid token
+ *       403:
+ *         description: Forbidden – only instructors or admins can create quizzes
+ *       500:
+ *         description: Server error
  */
 router.post("/", (0, auth_middleware_1.restrictTo)("instructor", "admin"), quizController.createQuiz);
 /**
@@ -126,7 +144,7 @@ router.post("/", (0, auth_middleware_1.restrictTo)("instructor", "admin"), quizC
  *     tags: [Quizzes]
  *     description: Retrieve a list of all quizzes with optional lesson and creator info.
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     responses:
  *       200:
  *         description: List of all quizzes
@@ -230,7 +248,7 @@ router.get("/", quizController.getAllQuizzes);
  *     summary: Get a quiz by ID
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     parameters:
  *       - in: path
  *         name: id
@@ -252,7 +270,7 @@ router.get("/:id", quizController.getQuizById);
  *     summary: Update a quiz
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     parameters:
  *       - in: path
  *         name: id
@@ -278,7 +296,7 @@ router.patch("/:id", (0, auth_middleware_1.restrictTo)("instructor", "admin"), q
  *     summary: Delete a quiz
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     parameters:
  *       - in: path
  *         name: id
@@ -297,7 +315,7 @@ router.delete("/:id", (0, auth_middleware_1.restrictTo)("instructor", "admin"), 
  *     summary: Get quiz analytics (average score, pass rate, attempts)
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     responses:
  *       200:
  *         description: Analytics for all quizzes
@@ -310,7 +328,7 @@ router.get("/analytics", (0, auth_middleware_1.restrictTo)("instructor", "admin"
  *     summary: Get quiz by lesson ID
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     parameters:
  *       - in: path
  *         name: lessonId
@@ -327,7 +345,7 @@ router.get("/lesson/:lessonId", quizController.getQuizByLesson);
  *     summary: Submit answers for a quiz and automatically grade
  *     tags: [Quizzes]
  *     security:
- *       - BearerAuth: []
+ *       - bearerAuth:
  *     parameters:
  *       - in: path
  *         name: id

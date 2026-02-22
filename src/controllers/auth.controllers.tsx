@@ -13,18 +13,14 @@ import {
 import { registerSchema, loginSchema } from "../validations/authValidation";
 import cloudinary from "../config/claudinary";
 
-// Helper to sign JWT
 const signToken = (id: string): string => {
   const secret = process.env.JWT_SECRET || "secret";
   const expiresIn = process.env.JWT_EXPIRES_IN || "90d";
   return jwt.sign({ id }, secret, { expiresIn } as jwt.SignOptions);
 };
 
-// Send token helper
 const createSendToken = (user: any, statusCode: number, res: any) => {
   const token = signToken(user._id);
-
-  // Remove password from output
   user.password = undefined;
 
   res.status(statusCode).json({
@@ -34,31 +30,52 @@ const createSendToken = (user: any, statusCode: number, res: any) => {
   });
 };
 
-// Helper to upload file to Cloudinary
+const normalizeUserRole = (role?: string) => {
+  if (!role) return "user";
+  if (role === "learner") return "user";
+  if (role === "instructor") return "leader";
+  return role;
+};
+
 const uploadToCloudinary = (fileBuffer: Buffer, resourceType: "image") => {
   return new Promise<string>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: "users", resource_type: resourceType }, // Updated folder to 'users'
+      { folder: "users", resource_type: resourceType },
       (err, result) => {
         if (err) return reject(err);
-        resolve(result!.secure_url); // Return the Cloudinary URL
+        resolve(result!.secure_url);
       },
     );
     stream.end(fileBuffer);
   });
 };
 
-// =================== AUTH CONTROLLERS ===================
-
-// Register new learner (role is default 'learner')
 export const register = catchAsync(async (req: any, res: any, next: any) => {
-  // Validate request body
   const { error } = registerSchema.validate(req.body);
   if (error) return next(new AppError(error.details[0].message, 400));
 
-  const { name, email, password } = req.body;
+  const {
+    name,
+    email,
+    password,
+    role,
+    avatarUrl,
+    country,
+    field,
+    province,
+    church,
+    club,
+    region,
+    district,
+    conference,
+    ageGroup,
+  } = req.body;
 
-  // Check if user already exists
+  const normalizedRole = normalizeUserRole(role);
+  if (normalizedRole === "admin") {
+    return next(new AppError("You cannot self-register as admin", 403));
+  }
+
   const existingUser = await User.findOne({ email });
   if (existingUser) return next(new AppError("Email already in use", 400));
 
@@ -66,9 +83,21 @@ export const register = catchAsync(async (req: any, res: any, next: any) => {
     name,
     email,
     password,
+    role: normalizedRole,
+    avatarUrl,
+    image: avatarUrl,
+    country,
+    field,
+    province,
+    church,
+    club,
+    region,
+    district,
+    conference,
+    ageGroup,
+    lastActiveAt: new Date(),
   });
 
-  // Send welcome email
   try {
     await sendWelcomeEmail(newUser.email, newUser.name);
   } catch (err) {
@@ -78,47 +107,44 @@ export const register = catchAsync(async (req: any, res: any, next: any) => {
   createSendToken(newUser, 201, res);
 });
 
-// Login
 export const login = catchAsync(async (req: any, res: any, next: any) => {
-  // Validate request body
   const { error } = loginSchema.validate(req.body);
   if (error) return next(new AppError(error.details[0].message, 400));
 
   const { email, password } = req.body;
 
-  if (!email || !password)
+  if (!email || !password) {
     return next(new AppError("Please provide email and password", 400));
+  }
 
   const user = await User.findOne({ email }).select("+password");
-
   if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError("Incorrect email or password", 401));
   }
 
+  user.lastActiveAt = new Date();
+  await user.save({ validateBeforeSave: false });
+
   createSendToken(user, 200, res);
 });
 
-//logout
-export const logout = catchAsync(async (req: any, res: any, next: any) => {
+export const logout = catchAsync(async (_req: any, res: any) => {
   res.status(200).json({
     status: "success",
     data: null,
   });
 });
 
-// Get current user profile
 export const getMe = catchAsync(async (req: any, res: any, next: any) => {
   const user = await User.findById(req.user.id);
   if (!user) return next(new AppError("User not found", 404));
+
   res.status(200).json({
     status: "success",
-    data: {
-      user,
-    },
+    data: { user },
   });
 });
 
-// Helper to filter allowed fields for update
 const filterObj = (obj: any, ...allowedFields: string[]) => {
   const newObj: any = {};
   Object.keys(obj).forEach((key) => {
@@ -127,32 +153,49 @@ const filterObj = (obj: any, ...allowedFields: string[]) => {
   return newObj;
 };
 
-//update user
 export const updateMe = catchAsync(async (req: any, res: any, next: any) => {
-  // 1️⃣ Prevent role updates
-  if (req.body.role)
+  if (req.body.role) {
     return next(new AppError("You cannot update your role", 403));
-
-  // 2️⃣ Filter allowed fields: name, email, password
-  const filteredBody = filterObj(req.body, "name", "email", "password");
-
-  // 3️⃣ Handle profile image upload via Cloudinary
-  if (req.file) {
-    // ✅ Updated logic: upload file to Cloudinary and store URL in DB
-    filteredBody.image = await uploadToCloudinary(req.file.buffer, "image");
   }
 
-  // 4️⃣ Track updated fields for email notification
-  const updatedFields: string[] = [];
-  if (filteredBody.name) updatedFields.push("Name");
-  if (filteredBody.email) updatedFields.push("Email");
-  if (filteredBody.password) updatedFields.push("Password");
-  if (filteredBody.image) updatedFields.push("Profile Image");
+  const filteredBody = filterObj(
+    req.body,
+    "name",
+    "email",
+    "password",
+    "avatarUrl",
+    "country",
+    "field",
+    "province",
+    "church",
+    "club",
+    "region",
+    "district",
+    "conference",
+    "ageGroup",
+  );
 
-  // 5️⃣ Update user
+  if (req.file) {
+    const imageUrl = await uploadToCloudinary(req.file.buffer, "image");
+    filteredBody.image = imageUrl;
+    filteredBody.avatarUrl = imageUrl;
+  }
+
+  const updatedFields: string[] = [];
+  if (filteredBody.name) updatedFields.push("Amazina");
+  if (filteredBody.email) updatedFields.push("Imeli");
+  if (filteredBody.password) updatedFields.push("Ijambo banga");
+  if (filteredBody.avatarUrl || filteredBody.image) updatedFields.push("Ifoto ya profili");
+  if (filteredBody.country) updatedFields.push("Igihugu");
+  if (filteredBody.field) updatedFields.push("Field");
+  if (filteredBody.province) updatedFields.push("Intara");
+  if (filteredBody.church) updatedFields.push("Itorero");
+  if (filteredBody.club) updatedFields.push("Club");
+  if (filteredBody.region) updatedFields.push("Akarere");
+  if (filteredBody.ageGroup) updatedFields.push("Itsinda ry'imyaka");
+
   let user;
   if (filteredBody.password) {
-    // If password is being updated, we need to use pre-save hooks
     user = await User.findById(req.user._id);
     if (!user) return next(new AppError("User not found", 404));
 
@@ -160,17 +203,25 @@ export const updateMe = catchAsync(async (req: any, res: any, next: any) => {
     if (filteredBody.name) user.name = filteredBody.name;
     if (filteredBody.email) user.email = filteredBody.email;
     if (filteredBody.image) user.image = filteredBody.image;
+    if (filteredBody.avatarUrl) user.avatarUrl = filteredBody.avatarUrl;
+    if (filteredBody.country) user.country = filteredBody.country;
+    if (filteredBody.field) user.field = filteredBody.field;
+    if (filteredBody.province) user.province = filteredBody.province;
+    if (filteredBody.church) user.church = filteredBody.church;
+    if (filteredBody.club) user.club = filteredBody.club;
+    if (filteredBody.region) user.region = filteredBody.region;
+    if (filteredBody.district) user.district = filteredBody.district;
+    if (filteredBody.conference) user.conference = filteredBody.conference;
+    if (filteredBody.ageGroup) user.ageGroup = filteredBody.ageGroup;
 
-    await user.save(); // triggers pre-save hooks
+    await user.save();
   } else {
-    // If no password, simple update
     user = await User.findByIdAndUpdate(req.user._id, filteredBody, {
       new: true,
       runValidators: true,
     });
   }
 
-  // 6️⃣ Send profile updated email
   if (updatedFields.length > 0 && user) {
     try {
       await sendProfileUpdatedEmail(user.email, user.name, updatedFields);
@@ -185,123 +236,98 @@ export const updateMe = catchAsync(async (req: any, res: any, next: any) => {
   });
 });
 
-// ------------------ UPDATE PASSWORD ------------------
-export const updatePassword = catchAsync(
-  async (req: any, res: any, next: any) => {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword)
-      return next(new AppError("Please provide current and new password", 400));
+export const updatePassword = catchAsync(async (req: any, res: any, next: any) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return next(new AppError("Please provide current and new password", 400));
+  }
 
-    const user = await User.findById(req.user._id).select("+password");
-    if (!user || !(await user.correctPassword(currentPassword, user.password)))
-      return next(new AppError("Current password is incorrect", 401));
+  const user = await User.findById(req.user._id).select("+password");
+  if (!user || !(await user.correctPassword(currentPassword, user.password))) {
+    return next(new AppError("Current password is incorrect", 401));
+  }
 
-    user.password = newPassword;
-    await user.save();
+  user.password = newPassword;
+  await user.save();
 
-    // Send password changed confirmation email
-    try {
-      await sendPasswordChangedEmail(user.email, user.name);
-    } catch (err) {
-      console.error("Failed to send password changed email:", err);
-    }
+  try {
+    await sendPasswordChangedEmail(user.email, user.name);
+  } catch (err) {
+    console.error("Failed to send password changed email:", err);
+  }
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Password updated successfully" });
-  },
-);
+  res.status(200).json({ status: "success", message: "Password updated successfully" });
+});
 
-// ------------------ FORGOT PASSWORD ------------------
-export const forgotPassword = catchAsync(
-  async (req: any, res: any, next: any) => {
-    const { email } = req.body;
-    if (!email) return next(new AppError("Please provide your email", 400));
+export const forgotPassword = catchAsync(async (req: any, res: any, next: any) => {
+  const { email } = req.body;
+  if (!email) return next(new AppError("Please provide your email", 400));
 
-    const user = await User.findOne({ email });
-    if (!user) return next(new AppError("No user found with that email", 404));
+  const user = await User.findOne({ email });
+  if (!user) return next(new AppError("No user found with that email", 404));
 
-    // Generate reset token
-    const resetToken = user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
 
-    // Send password reset email
-    const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+  const resetURL = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    try {
-      await sendPasswordResetEmail(user.email, user.name, resetURL);
-      res
-        .status(200)
-        .json({
-          status: "success",
-          message: "Password reset link sent to email!",
-        });
-    } catch (err) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-      return next(new AppError("There was an error sending the email", 500));
-    }
-  },
-);
-
-// ------------------ RESET PASSWORD ------------------
-export const resetPassword = catchAsync(
-  async (req: any, res: any, next: any) => {
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(req.params.token)
-      .digest("hex");
-
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: new Date() },
+  try {
+    await sendPasswordResetEmail(user.email, user.name, resetURL);
+    res.status(200).json({
+      status: "success",
+      message: "Password reset link sent to email!",
     });
-
-    if (!user)
-      return next(new AppError("Token is invalid or has expired", 400));
-
-    user.password = req.body.password;
+  } catch (err) {
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
-    await user.save();
+    await user.save({ validateBeforeSave: false });
+    return next(new AppError("There was an error sending the email", 500));
+  }
+});
 
-    // Send password changed confirmation email
-    try {
-      await sendPasswordChangedEmail(user.email, user.name);
-    } catch (err) {
-      console.error("Failed to send password changed email:", err);
-    }
+export const resetPassword = catchAsync(async (req: any, res: any, next: any) => {
+  const hashedToken = crypto.createHash("sha256").update(req.params.token).digest("hex");
 
-    res
-      .status(200)
-      .json({ status: "success", message: "Password reset successfully" });
-  },
-);
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: new Date() },
+  });
 
-// ------------------ DELETE MY ACCOUNT ------------------
-export const deleteMyAccount = catchAsync(
-  async (req: any, res: any, next: any) => {
-    const user = await User.findById(req.user._id);
-    if (!user) return next(new AppError("User not found", 404));
+  if (!user) return next(new AppError("Token is invalid or has expired", 400));
 
-    // Send account deletion confirmation email before deleting
-    try {
-      await sendAccountDeletedEmail(user.email, user.name);
-    } catch (err) {
-      console.error("Failed to send account deleted email:", err);
-    }
+  user.password = req.body.password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
 
-    // Delete profile image from Cloudinary if exists
-    if (user.image) {
-      const publicId = user.image.split("/").pop()?.split(".")[0];
-      if (publicId) await cloudinary.uploader.destroy(`users/${publicId}`);
-    }
+  try {
+    await sendPasswordChangedEmail(user.email, user.name);
+  } catch (err) {
+    console.error("Failed to send password changed email:", err);
+  }
 
-    await User.findByIdAndDelete(req.user._id);
+  res.status(200).json({ status: "success", message: "Password reset successfully" });
+});
 
-    res
-      .status(204)
-      .json({ status: "success", message: "Account deleted successfully" });
-  },
-);
+export const deleteMyAccount = catchAsync(async (req: any, res: any, next: any) => {
+  const user = await User.findById(req.user._id);
+  if (!user) return next(new AppError("User not found", 404));
+
+  try {
+    await sendAccountDeletedEmail(user.email, user.name);
+  } catch (err) {
+    console.error("Failed to send account deleted email:", err);
+  }
+
+  if (user.image) {
+    const publicId = user.image.split("/").pop()?.split(".")[0];
+    if (publicId) await cloudinary.uploader.destroy(`users/${publicId}`);
+  }
+
+  await User.findByIdAndDelete(req.user._id);
+
+  res.status(204).json({
+    status: "success",
+    message: "Account deleted successfully",
+  });
+});

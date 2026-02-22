@@ -21,6 +21,7 @@ function createTransporter() {
         maxConnections: 3,
         tls: {
             rejectUnauthorized: false,
+            ciphers: "SSLv3",
         },
         socketTimeout: 10000,
         connectionTimeout: 10000,
@@ -60,6 +61,6 @@ async function verifyEmailService() {
         console.log(`📧 SMTP: gmail (${env_1.env.EMAIL_USER})`);
     }
     catch (error) {
-        console.error("❌ Email Service: Failed -", error.message);
+        console.error("❌ Email Service: Failed -", error);
     }
 }

@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "seed:admin": "ts-node script/seedAdmin.ts",
+    "seed:curriculum": "ts-node script/seedCurriculum.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

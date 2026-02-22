@@ -14,18 +14,18 @@ export const accountDeletedEmailTemplate = (name: string): string => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Account Deleted</h1>
+      <h1>Konti yawe yasibwe</h1>
     </div>
     <div class="content">
-      <h2>Goodbye ${name},</h2>
-      <p>Your Digital Learning Platform account has been successfully deleted.</p>
-      <p>We're sorry to see you go. All your data has been removed from our system.</p>
-      <p>If you change your mind, you're always welcome to create a new account and rejoin our learning community.</p>
-      <p>Thank you for being part of our platform.</p>
-      <p>Best wishes,<br>The Digital Learning Team</p>
+      <h2>Murabeho ${name},</h2>
+      <p>Konti yawe yasibwe neza muri sisitemu yacu.</p>
+      <p>Amakuru yawe yose yavanywe muri sisitemu.</p>
+      <p>Nimwifuza kugaruka, mushobora kongera kwiyandikisha igihe icyo ari cyo cyose.</p>
+      <p>Murakoze kuba mwarabanye natwe.</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 8002;
     await (0, nodemailer_1.verifyEmailService)();
     app_1.default.listen(PORT, () => {
         console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+        console.log(`Swagger docs: http://localhost:${PORT}/api/v1/api-docs`);
     });
 });
 process.on('unhandledRejection', (err) => {

@@ -8,7 +8,6 @@ export const reportApprovedEmailTemplate = (name: string): string => {
     .container { max-width: 600px; margin: 0 auto; padding: 20px; }
     .header { background: #2E86DE; color: white; padding: 20px; text-align: center; }
     .content { padding: 20px; background: #f9f9f9; }
-    .button { display: inline-block; padding: 12px 24px; background: #2E86DE; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
     .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
     .info { background: #E8F4FD; border-left: 4px solid #2E86DE; padding: 10px; margin: 15px 0; }
   </style>
@@ -16,22 +15,21 @@ export const reportApprovedEmailTemplate = (name: string): string => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Report Approved ✅</h1>
+      <h1>Ubusabe bwa raporo bwemejwe</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>Good news! Your request to download your academic report has been <strong>approved</strong> by your instructor/admin.</p>
+      <h2>Muraho ${name},</h2>
+      <p>Inkuru nziza. Ubusabe bwawe bwo gukuramo raporo bwemejwe n'umuyobozi wawe.</p>
 
       <div class="info">
-        <p>You can now log in to your account and download your report securely.</p>
+        <p>Ubu ushobora kwinjira kuri konti yawe ugakuramo raporo yawe.</p>
       </div>
 
-      <p>We recommend downloading your report soon. If you have any questions, contact support.</p>
-
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <p>Niba hari ikibazo, twandikire.</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

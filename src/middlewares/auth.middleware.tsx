@@ -8,6 +8,12 @@ export interface AuthRequest extends Request {
   user?: any;
 }
 
+const normalizeRole = (role: string) => {
+  if (role === "learner") return "user";
+  if (role === "instructor") return "leader";
+  return role;
+};
+
 export const protect = catchAsync(async (req: AuthRequest, res: Response, next: NextFunction) => {
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -25,13 +31,18 @@ export const protect = catchAsync(async (req: AuthRequest, res: Response, next: 
     return next(new AppError('The user belonging to this token no longer exists.', 401));
   }
 
+  await User.findByIdAndUpdate(currentUser._id, { lastActiveAt: new Date() }).catch(() => null);
+
   req.user = currentUser;
   next();
 });
 
 export const restrictTo = (...roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!roles.includes(req.user.role)) {
+    const normalizedRequestedRoles = roles.map(normalizeRole);
+    const normalizedCurrentRole = normalizeRole(req.user.role);
+
+    if (!normalizedRequestedRoles.includes(normalizedCurrentRole)) {
       return next(new AppError('You do not have permission to perform this action', 403));
     }
     next();

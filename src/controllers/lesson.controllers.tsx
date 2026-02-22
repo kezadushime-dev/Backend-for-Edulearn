@@ -2,9 +2,9 @@ import { Lesson } from "../models/lesson.model";
 import { Course } from "../models/course.model";
 import { catchAsync } from "../utils/catchAsync";
 import { AuthRequest } from "../middlewares/auth.middleware";
+import { AppError } from "../utils/AppError";
 import cloudinary from "../config/claudinary";
 
-// Upload helper
 const uploadToCloudinary = (
   fileBuffer: Buffer,
   resourceType: "image" | "video" | "raw",
@@ -17,7 +17,7 @@ const uploadToCloudinary = (
       },
       (error, result) => {
         if (error) return reject(error);
-        resolve(result?.secure_url!);
+        resolve(result?.secure_url || "");
       },
     );
 
@@ -25,23 +25,62 @@ const uploadToCloudinary = (
   });
 };
 
+const parseMaybeJson = (value: any, fieldName: string) => {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "string") return value;
 
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
 
-// ✅ CREATE LESSON
+  const maybeJson =
+    (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+    (trimmed.startsWith("[") && trimmed.endsWith("]"));
+
+  if (!maybeJson) return value;
+
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    throw new AppError(`Invalid JSON format in '${fieldName}'`, 400);
+  }
+};
+
+const parseStructuredField = (
+  value: any,
+  fieldName: string,
+  expected: "array" | "object",
+) => {
+  const parsed = parseMaybeJson(value, fieldName);
+  if (parsed === undefined) return undefined;
+
+  if (expected === "array" && !Array.isArray(parsed)) {
+    throw new AppError(`'${fieldName}' must be an array`, 400);
+  }
+
+  if (
+    expected === "object" &&
+    (Array.isArray(parsed) || typeof parsed !== "object")
+  ) {
+    throw new AppError(`'${fieldName}' must be an object`, 400);
+  }
+
+  return parsed;
+};
+
 export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   req.body.instructor = req.user.id;
 
-  const courseTitle = req.body.course; // now frontend sends title
+  const courseInput = req.body.course;
 
-  if (!courseTitle) {
+  if (!courseInput) {
     return res.status(400).json({
       status: "fail",
       message: "Lesson must belong to a course",
     });
   }
 
-  // 🔥 Find course by title instead of id
-  const course = await Course.findOne({ title: courseTitle });
+  const course =
+    (await Course.findById(courseInput)) || (await Course.findOne({ title: courseInput }));
 
   if (!course) {
     return res.status(404).json({
@@ -53,48 +92,62 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   const files = req.files as {
     images?: Express.Multer.File[];
     video?: Express.Multer.File[];
+    videos?: Express.Multer.File[];
+    audio?: Express.Multer.File[];
+    audios?: Express.Multer.File[];
     documents?: Express.Multer.File[];
   };
 
-  let imageUrls: string[] = [];
-  let videoUrls: string[] = [];
-  let documentUrls: string[] = [];
+  const imageFiles = files?.images || [];
+  const videoFiles = [...(files?.video || []), ...(files?.videos || [])];
+  const audioFiles = [...(files?.audio || []), ...(files?.audios || [])];
+  const documentFiles = files?.documents || [];
 
-  if (files?.images) {
-    imageUrls = await Promise.all(
-      files.images.map((file) =>
-        uploadToCloudinary(file.buffer, "image")
-      )
-    );
-  }
+  const imageUrls = await Promise.all(
+    imageFiles.map((file) => uploadToCloudinary(file.buffer, "image")),
+  );
 
-  if (files?.video) {
-    videoUrls = await Promise.all(
-      files.video.map((file) =>
-        uploadToCloudinary(file.buffer, "video")
-      )
-    );
-  }
+  const videoUrls = await Promise.all(
+    videoFiles.map((file) => uploadToCloudinary(file.buffer, "video")),
+  );
 
-  if (files?.documents) {
-    documentUrls = await Promise.all(
-      files.documents.map((file) =>
-        uploadToCloudinary(file.buffer, "raw")
-      )
-    );
-  }
+  const audioUrls = await Promise.all(
+    audioFiles.map((file) => uploadToCloudinary(file.buffer, "video")),
+  );
 
-  const newLesson = await Lesson.create({
+  const documentUrls = await Promise.all(
+    documentFiles.map((file) => uploadToCloudinary(file.buffer, "raw")),
+  );
+
+  const modules = parseStructuredField(req.body.modules, "modules", "array");
+  const quiz = parseStructuredField(req.body.quiz, "quiz", "object");
+  const interactiveElements = parseStructuredField(
+    req.body.interactiveElements,
+    "interactiveElements",
+    "object",
+  );
+
+  const lessonPayload: any = {
     ...req.body,
-    course: course._id, // 🔥 store ID internally
+    course: course._id,
     images: imageUrls,
     videos: videoUrls,
+    audios: audioUrls,
     documents: documentUrls,
-  });
+  };
 
-  // Add lesson to course
+  if (req.body.durationMinutes !== undefined) {
+    lessonPayload.durationMinutes = Number(req.body.durationMinutes) || 0;
+  }
+
+  if (modules !== undefined) lessonPayload.modules = modules;
+  if (quiz !== undefined) lessonPayload.quiz = quiz;
+  if (interactiveElements !== undefined) lessonPayload.interactiveElements = interactiveElements;
+
+  const newLesson = await Lesson.create(lessonPayload);
+
   await Course.findByIdAndUpdate(course._id, {
-    $push: { lessons: newLesson._id },
+    $addToSet: { lessons: newLesson._id },
   });
 
   res.status(201).json({
@@ -103,14 +156,11 @@ export const createLesson = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-
-
-// ✅ GET ALL LESSONS
-export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
+export const getAllLessons = catchAsync(async (_req: AuthRequest, res: any) => {
   const lessons = await Lesson.find()
     .sort({ order: 1 })
     .populate("instructor", "name image")
-    .populate("course", "title");
+    .populate("course", "title frameworkCategory category");
 
   res.status(200).json({
     status: "success",
@@ -119,13 +169,17 @@ export const getAllLessons = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-
-
-// ✅ GET SINGLE LESSON
 export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
   const lesson = await Lesson.findById(req.params.id)
     .populate("instructor", "name image")
-    .populate("course", "title description");
+    .populate("course", "title description frameworkCategory category");
+
+  if (!lesson) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Lesson not found",
+    });
+  }
 
   res.status(200).json({
     status: "success",
@@ -133,45 +187,97 @@ export const getLesson = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
+export const getLessonModules = catchAsync(async (req: AuthRequest, res: any) => {
+  const lesson = await Lesson.findById(req.params.id).select(
+    "_id title modules quiz interactiveElements",
+  );
 
+  if (!lesson) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Lesson not found",
+    });
+  }
 
-// ✅ UPDATE LESSON
+  res.status(200).json({
+    status: "success",
+    data: {
+      lessonId: lesson._id,
+      title: lesson.title,
+      modules: (lesson as any).modules || [],
+      quiz: (lesson as any).quiz || { questions: [] },
+      interactiveElements: (lesson as any).interactiveElements || {
+        discussionPrompts: [],
+        practicalAssignments: [],
+        spiritualReflections: [],
+      },
+    },
+  });
+});
+
 export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
   const files = req.files as {
     images?: Express.Multer.File[];
     video?: Express.Multer.File[];
+    videos?: Express.Multer.File[];
+    audio?: Express.Multer.File[];
+    audios?: Express.Multer.File[];
     documents?: Express.Multer.File[];
   };
 
   if (files?.images) {
     req.body.images = await Promise.all(
-      files.images.map((file) =>
-        uploadToCloudinary(file.buffer, "image")
-      )
+      files.images.map((file) => uploadToCloudinary(file.buffer, "image")),
     );
   }
 
-  if (files?.video) {
+  if (files?.video || files?.videos) {
+    const videoFiles = [...(files?.video || []), ...(files?.videos || [])];
     req.body.videos = await Promise.all(
-      files.video.map((file) =>
-        uploadToCloudinary(file.buffer, "video")
-      )
+      videoFiles.map((file) => uploadToCloudinary(file.buffer, "video")),
+    );
+  }
+
+  if (files?.audio || files?.audios) {
+    const audioFiles = [...(files?.audio || []), ...(files?.audios || [])];
+    req.body.audios = await Promise.all(
+      audioFiles.map((file) => uploadToCloudinary(file.buffer, "video")),
     );
   }
 
   if (files?.documents) {
     req.body.documents = await Promise.all(
-      files.documents.map((file) =>
-        uploadToCloudinary(file.buffer, "raw")
-      )
+      files.documents.map((file) => uploadToCloudinary(file.buffer, "raw")),
     );
   }
 
-  const lesson = await Lesson.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
+  const modules = parseStructuredField(req.body.modules, "modules", "array");
+  const quiz = parseStructuredField(req.body.quiz, "quiz", "object");
+  const interactiveElements = parseStructuredField(
+    req.body.interactiveElements,
+    "interactiveElements",
+    "object",
   );
+
+  if (modules !== undefined) req.body.modules = modules;
+  if (quiz !== undefined) req.body.quiz = quiz;
+  if (interactiveElements !== undefined) req.body.interactiveElements = interactiveElements;
+
+  if (req.body.durationMinutes !== undefined) {
+    req.body.durationMinutes = Number(req.body.durationMinutes) || 0;
+  }
+
+  const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!lesson) {
+    return res.status(404).json({
+      status: "fail",
+      message: "Lesson not found",
+    });
+  }
 
   res.status(200).json({
     status: "success",
@@ -179,9 +285,6 @@ export const updateLesson = catchAsync(async (req: AuthRequest, res: any) => {
   });
 });
 
-
-
-// ✅ DELETE LESSON
 export const deleteLesson = catchAsync(async (req: AuthRequest, res: any) => {
   const lesson = await Lesson.findById(req.params.id);
 
@@ -192,7 +295,6 @@ export const deleteLesson = catchAsync(async (req: AuthRequest, res: any) => {
     });
   }
 
-  // 🔥 Remove from course
   await Course.findByIdAndUpdate(lesson.course, {
     $pull: { lessons: lesson._id },
   });

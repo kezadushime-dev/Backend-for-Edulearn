@@ -8,6 +8,13 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_model_1 = require("../models/user.model");
 const AppError_1 = require("../utils/AppError");
 const catchAsync_1 = require("../utils/catchAsync");
+const normalizeRole = (role) => {
+    if (role === "learner")
+        return "user";
+    if (role === "instructor")
+        return "leader";
+    return role;
+};
 exports.protect = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     let token;
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -21,12 +28,15 @@ exports.protect = (0, catchAsync_1.catchAsync)(async (req, res, next) => {
     if (!currentUser) {
         return next(new AppError_1.AppError('The user belonging to this token no longer exists.', 401));
     }
+    await user_model_1.User.findByIdAndUpdate(currentUser._id, { lastActiveAt: new Date() }).catch(() => null);
     req.user = currentUser;
     next();
 });
 const restrictTo = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
+        const normalizedRequestedRoles = roles.map(normalizeRole);
+        const normalizedCurrentRole = normalizeRole(req.user.role);
+        if (!normalizedRequestedRoles.includes(normalizedCurrentRole)) {
             return next(new AppError_1.AppError('You do not have permission to perform this action', 403));
         }
         next();

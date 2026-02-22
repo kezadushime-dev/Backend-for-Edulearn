@@ -43,7 +43,6 @@ const adminValidation_1 = require("../validations/adminValidation");
 const adminController = __importStar(require("../controllers/admin.controllers"));
 const router = express_1.default.Router();
 router.use(auth_middleware_1.protect);
-router.use((0, auth_middleware_1.restrictTo)("admin"));
 /**
  * @swagger
  * /admin/users:
@@ -60,7 +59,7 @@ router.use((0, auth_middleware_1.restrictTo)("admin"));
  *       403:
  *         description: Forbidden - Admin only
  */
-router.get("/users", adminController.getAllUsers);
+router.get("/users", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), adminController.getAllUsers);
 /**
  * @swagger
  * /admin/users/{id}:
@@ -81,7 +80,61 @@ router.get("/users", adminController.getAllUsers);
  *       404:
  *         description: User not found
  */
-router.get("/users/:id", adminController.getUserById);
+router.get("/users/:id", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), adminController.getUserById);
+/**
+ * @swagger
+ * /admin/users:
+ *   post:
+ *     summary: Create user (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             required: [name, email, password, role]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 example: john@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *               role:
+ *                 type: string
+ *                 enum: [learner, instructor, admin]
+ *                 example: instructor
+ *
+ *     responses:
+ *       201:
+ *         description: User created
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: success
+ *               data:
+ *                 user:
+ *                   id: 65a8c9e4f12a3b0012abc123
+ *                   name: John Doe
+ *                   email: john@example.com
+ *                   role: instructor
+ *
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Not authenticated
+ *       403:
+ *         description: Not authorized (admin only)
+ *       409:
+ *         description: Email already exists
+ */
+router.post("/users", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), (0, validate_middleware_1.validate)(adminValidation_1.adminCreateUserSchema), adminController.createUser);
 /**
  * @swagger
  * /admin/users/{id}/role:
@@ -114,7 +167,7 @@ router.get("/users/:id", adminController.getUserById);
  *       404:
  *         description: User not found
  */
-router.patch("/users/:id/role", (0, validate_middleware_1.validate)(adminValidation_1.updateRoleSchema), adminController.updateUserRole);
+router.patch("/users/:id/role", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), (0, validate_middleware_1.validate)(adminValidation_1.updateRoleSchema), adminController.updateUserRole);
 /**
  * @swagger
  * /admin/users/{id}:
@@ -135,7 +188,7 @@ router.patch("/users/:id/role", (0, validate_middleware_1.validate)(adminValidat
  *       404:
  *         description: User not found
  */
-router.delete("/users/:id", adminController.deleteUser);
+router.delete("/users/:id", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), adminController.deleteUser);
 /**
  * @swagger
  * /admin/users/role/{role}:
@@ -155,7 +208,7 @@ router.delete("/users/:id", adminController.deleteUser);
  *       200:
  *         description: List of users with specified role
  */
-router.get("/users/role/:role", adminController.getUsersByRole);
+router.get("/users/role/:role", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), adminController.getUsersByRole);
 /**
  * @swagger
  * /admin/statistics:
@@ -168,5 +221,60 @@ router.get("/users/role/:role", adminController.getUsersByRole);
  *       200:
  *         description: Platform statistics
  */
-router.get("/statistics", adminController.getStatistics);
+router.get("/statistics", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin"), adminController.getStatistics);
+/**
+ * @swagger
+ * /admin/reports/{id}/approve:
+ *   patch:
+ *     summary: Approve a learner's report(admin and instructor)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     description: Admin or instructor approves a learner's report, allowing them to download it. Sets report status to "approved" and records who approved it.
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Report ID to approve
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Report approved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Report approved
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     report:
+ *                       type: object
+ *                       description: Approved report object
+ *       404:
+ *         description: Report not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: fail
+ *                 message:
+ *                   type: string
+ *                   example: Report not found
+ *       401:
+ *         description: Unauthorized – user must be logged in
+ *       403:
+ *         description: Forbidden – only admin or instructor can approve
+ */
+router.patch("/reports/:id/approve", auth_middleware_1.protect, (0, auth_middleware_1.restrictTo)("admin", "instructor"), adminController.approveReport);
 exports.default = router;

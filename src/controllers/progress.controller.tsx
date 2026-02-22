@@ -22,21 +22,32 @@ export const completeLesson = catchAsync(async (req: AuthRequest, res: any) => {
   }
 
   // If lesson not completed yet
-  if (!progressDoc.completedLessons.includes(lessonId)) {
+  const alreadyCompleted = progressDoc.completedLessons.some(
+    (id: any) => id.toString() === lessonId.toString(),
+  );
+
+  if (!alreadyCompleted) {
     progressDoc.completedLessons.push(lessonId);
 
     // Calculate progress percentage
     const totalLessons = await Lesson.countDocuments({ course: courseId });
-    progressDoc.progress = Math.round((progressDoc.completedLessons.length / totalLessons) * 100);
-
-    await progressDoc.save();
+    progressDoc.progress =
+      totalLessons > 0
+        ? Math.round((progressDoc.completedLessons.length / totalLessons) * 100)
+        : 0;
   }
+
+  const lessonMinutesToAdd = !alreadyCompleted ? (lesson as any).durationMinutes || 0 : 0;
+  progressDoc.totalMinutes = (progressDoc.totalMinutes || 0) + lessonMinutesToAdd;
+  progressDoc.lastAccessedAt = new Date();
+  await progressDoc.save();
 
   res.status(200).json({
     status: "success",
     data: {
       lessonCompleted: lesson.title,
       progress: progressDoc.progress,
+      totalMinutes: progressDoc.totalMinutes,
     },
   });
 });

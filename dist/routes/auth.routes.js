@@ -41,6 +41,7 @@ const authController = __importStar(require("../controllers/auth.controllers"));
 const validate_middleware_1 = require("../middlewares/validate.middleware");
 const authValidation_1 = require("../validations/authValidation");
 const auth_middleware_1 = require("../middlewares/auth.middleware");
+const upload_middleware_1 = require("../middlewares/upload.middleware");
 const router = express_1.default.Router();
 /**
  * @swagger
@@ -69,6 +70,16 @@ const router = express_1.default.Router();
  *               password:
  *                 type: string
  *                 minLength: 8
+ *               country:
+ *                 type: string
+ *               field:
+ *                 type: string
+ *               province:
+ *                 type: string
+ *               church:
+ *                 type: string
+ *               club:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -141,24 +152,71 @@ router.get("/me", auth_middleware_1.protect, authController.getMe);
  *     security:
  *       - bearerAuth: []
  *     requestBody:
+ *       required: false
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
  *               name:
  *                 type: string
+ *                 description: Update user name
  *               email:
  *                 type: string
+ *                 description: Update user email
  *               password:
  *                 type: string
+ *                 description: Update user password
+ *               country:
+ *                 type: string
+ *                 description: Update country
+ *               field:
+ *                 type: string
+ *                 description: Update field
+ *               province:
+ *                 type: string
+ *                 description: Update province
+ *               church:
+ *                 type: string
+ *                 description: Update church
+ *               club:
+ *                 type: string
+ *                 description: Update club
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: Upload profile image
  *     responses:
  *       200:
  *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         _id:
+ *                           type: string
+ *                         name:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         role:
+ *                           type: string
+ *                         image:
+ *                           type: string
+ *                           description: Profile image URL
  *       403:
  *         description: Cannot update role
  */
-router.patch("/me", auth_middleware_1.protect, authController.updateMe);
+router.patch('/me', auth_middleware_1.protect, upload_middleware_1.upload.single('image'), authController.updateMe);
 /**
  * @swagger
  * /auth/update-password:

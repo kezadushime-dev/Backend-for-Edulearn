@@ -11,6 +11,7 @@ const envSchema = zod_1.z.object({
     PORT: zod_1.z.string().default('5000'),
     NODE_ENV: zod_1.z.enum(['development', 'production', 'test']).default('development'),
     MONGODB_URI: zod_1.z.string().min(1),
+    MONGODB_URI_FALLBACK: zod_1.z.string().optional(),
     JWT_SECRET: zod_1.z.string().min(8),
     JWT_EXPIRES_IN: zod_1.z.string().default('7d'),
     CLOUDINARY_CLOUD_NAME: zod_1.z.string().optional(),

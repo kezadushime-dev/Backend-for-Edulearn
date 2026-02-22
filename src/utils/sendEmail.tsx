@@ -19,7 +19,7 @@ export const sendWelcomeEmail = async (email: string, name: string): Promise<voi
   const { welcomeEmailTemplate } = await import('../templates/emails/welcomeEmail');
   await sendEmail({
     email,
-    subject: 'Welcome to Digital Learning Platform',
+    subject: 'Murakaza neza muri Adventits youth Ministry Rwanda',
     html: welcomeEmailTemplate(name),
   });
 };
@@ -28,7 +28,7 @@ export const sendPasswordResetEmail = async (email: string, name: string, resetU
   const { passwordResetEmailTemplate } = await import('../templates/emails/passwordResetEmail');
   await sendEmail({
     email,
-    subject: 'Password Reset Request',
+    subject: 'Ubusabe bwo guhindura ijambo banga',
     html: passwordResetEmailTemplate(name, resetURL),
   });
 };
@@ -37,7 +37,7 @@ export const sendPasswordChangedEmail = async (email: string, name: string): Pro
   const { passwordChangedEmailTemplate } = await import('../templates/emails/passwordChangedEmail');
   await sendEmail({
     email,
-    subject: 'Password Changed Successfully',
+    subject: 'Ijambo banga ryahinduwe neza',
     html: passwordChangedEmailTemplate(name),
   });
 };
@@ -46,7 +46,7 @@ export const sendAccountDeletedEmail = async (email: string, name: string): Prom
   const { accountDeletedEmailTemplate } = await import('../templates/emails/accountDeletedEmail');
   await sendEmail({
     email,
-    subject: 'Account Deleted',
+    subject: 'Konti yawe yasibwe',
     html: accountDeletedEmailTemplate(name),
   });
 };
@@ -55,7 +55,7 @@ export const sendRoleUpdatedEmail = async (email: string, name: string, newRole:
   const { roleUpdatedEmailTemplate } = await import('../templates/emails/roleUpdatedEmail');
   await sendEmail({
     email,
-    subject: 'Your Role Has Been Updated',
+    subject: 'Uruhare rwawe rwahinduwe',
     html: roleUpdatedEmailTemplate(name, newRole),
   });
 };
@@ -64,7 +64,7 @@ export const sendAccountDeletedByAdminEmail = async (email: string, name: string
   const { accountDeletedByAdminEmailTemplate } = await import('../templates/emails/accountDeletedByAdminEmail');
   await sendEmail({
     email,
-    subject: 'Account Deleted by Administrator',
+    subject: 'Konti yawe yasibwe n ubuyobozi',
     html: accountDeletedByAdminEmailTemplate(name),
   });
 };
@@ -74,7 +74,7 @@ export const sendReportApprovedEmail = async (email: string, name: string): Prom
 
   await sendEmail({
     email,
-    subject: "Your Report Download Request is Approved",
+    subject: "Ubusabe bwawe bwo gukuramo raporo bwemejwe",
     html: reportApprovedEmailTemplate(name),
   });
 };
@@ -83,7 +83,7 @@ export const sendProfileUpdatedEmail = async (email: string, name: string, updat
   const { profileUpdatedEmailTemplate } = await import('../templates/emails/profileUpdatedEmail');
   await sendEmail({
     email,
-    subject: 'Profile Updated Successfully',
+    subject: 'Umwirondoro wawe wavuguruwe',
     html: profileUpdatedEmailTemplate(name, updatedFields),
   });
 };

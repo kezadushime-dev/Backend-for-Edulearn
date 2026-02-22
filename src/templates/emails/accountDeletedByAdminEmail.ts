@@ -15,20 +15,20 @@ export const accountDeletedByAdminEmailTemplate = (name: string): string => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>Account Deleted</h1>
+      <h1>Konti yasibwe n'ubuyobozi</h1>
     </div>
     <div class="content">
-      <h2>Hi ${name},</h2>
-      <p>Your Digital Learning Platform account has been deleted by an administrator.</p>
+      <h2>Muraho ${name},</h2>
+      <p>Konti yawe yasibwe n'umuyobozi wa sisitemu.</p>
       <div class="warning">
-        <strong>⚠️ Important:</strong>
-        <p>All your data has been removed from our system. This action cannot be undone.</p>
+        <strong>Icyitonderwa:</strong>
+        <p>Amakuru yawe yose yavanywe muri sisitemu kandi ntashobora kugarurwa.</p>
       </div>
-      <p>If you believe this was done in error, please contact our support team immediately.</p>
-      <p>Best regards,<br>The Digital Learning Team</p>
+      <p>Niba mubona habayeho ikosa, twandikire vuba bishoboka.</p>
+      <p>Murakoze,<br>Itsinda rya Adventits youth Ministry Rwanda</p>
     </div>
     <div class="footer">
-      <p>&copy; ${new Date().getFullYear()} Digital Learning Platform. All rights reserved.</p>
+      <p>&copy; ${new Date().getFullYear()} Adventits youth Ministry Rwanda. Uburenganzira bwose burabitswe.</p>
     </div>
   </div>
 </body>

@@ -24,8 +24,20 @@ export const registerSchema = Joi.object({
     .messages({
       "string.min": "Password must be at least 8 characters",
       "string.pattern.base":
-        "Password must contain letters and numbers",
+      "Password must contain letters and numbers",
     }),
+
+  role: Joi.string().valid("user", "leader", "learner", "instructor").optional(),
+  avatarUrl: Joi.string().uri().optional(),
+  country: Joi.string().allow("").optional(),
+  field: Joi.string().allow("").optional(),
+  province: Joi.string().allow("").optional(),
+  church: Joi.string().allow("").optional(),
+  club: Joi.string().allow("").optional(),
+  region: Joi.string().allow("").optional(),
+  district: Joi.string().allow("").optional(),
+  conference: Joi.string().allow("").optional(),
+  ageGroup: Joi.string().allow("").optional(),
 });
 
 
